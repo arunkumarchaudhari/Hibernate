@@ -1,14 +1,18 @@
+/*
+	Author: Arun KC
+	Date: 04/10/2023
+	NOTE:: This code will work upto Hibernate v 4.x
+	       from 5.x onwards transaction management is mandatory for non-select persistence operation
+*/
 package com.kc.test;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 
 import com.kc.entity.Product;
 
-public class SaveObjTest {
+public class SaveObjTest1 {
 	public static void main(String[] args) {
 		
 		//activate HB framework
@@ -25,36 +29,22 @@ public class SaveObjTest {
 		
 		//Prepare Entity class object having data
 		Product p =new Product();
-		p.setPid(1802);
-		p.setPname("Ganga");
-		p.setPrice(1650.90);
-		p.setQty(21.0);
+		p.setPid(1803);
+		p.setPname("Shivam");
+		p.setPrice(1550.90);
+		p.setQty(31.0);
 		p.setStatus("Available");
 		
-		Transaction tx= null;
-		boolean flag=false;
-		try {
-			tx=ses.beginTransaction();
+			//Dave object
 			ses.save(p);
-			flag=true;
-		}
-		catch(HibernateException e) {
-			e.printStackTrace();
-			flag=false;
-		}
-		finally {
-			if(flag) {
-				tx.commit();
-				System.out.println("Record Inserted...");
-			}
-			else {
-				tx.rollback();
-				System.out.println("Record not inserted...");
-			}
+			
+			//flush the session..
+			ses.flush();
+			System.out.println("Record Inserted...");
+			
 			//Closing HB object...
 			ses.close();
 			factory.close();
-		}
 		
 	}
 }
