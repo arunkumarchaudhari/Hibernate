@@ -1,6 +1,10 @@
 /*
 	Author: Arun KC
 	version: 1.0
+	Date: 07/10/2023
+	Reason:: Persist method test.
+	         persist method does not support any generator-> so remove it from hProduct.hbm.xml file 
+	         
 */
 package com.kc.test;
 
@@ -12,7 +16,7 @@ import org.hibernate.cfg.Configuration;
 
 import com.kc.entity.Product;
 
-public class SaveObjTest {
+public class PersistObjTest {
 	public static void main(String[] args) {
 		
 		//activate HB framework
@@ -29,17 +33,18 @@ public class SaveObjTest {
 		
 		//Prepare Entity class object having data
 		Product p =new Product();
-		p.setPid(1809);
-		p.setPname("KC");
-		p.setPrice(2500.00);
-		p.setQty(10.0);
+		p.setPid(1810);
+		p.setPname("Kanak");
+		p.setPrice(12500.00);
+		p.setQty(110.0);
 		p.setStatus("Available");
 		
 		Transaction tx= null;
 		boolean flag=false;
 		try {
 			tx=ses.beginTransaction();
-			ses.save(p);
+			
+			ses.persist(p);
 			flag=true;
 		}
 		catch(HibernateException e) {
