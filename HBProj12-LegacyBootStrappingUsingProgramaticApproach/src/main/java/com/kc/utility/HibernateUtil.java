@@ -31,7 +31,6 @@ public class HibernateUtil {
 			cfg.setProperty("hibernate.dialect", "org.hibernate.dialect.Oracle12cDialect");
 			
 			cfg.addFile("src/main/java/com/kc/entity/Product.hbm.xml");
-			
 			// build SessionFactory
 			factory = cfg.buildSessionFactory();
 		}catch (HibernateException he) {
