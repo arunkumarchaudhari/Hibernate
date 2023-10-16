@@ -5,6 +5,10 @@
 */
 package com.kc.utility;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Properties;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -15,11 +19,16 @@ public class HibernateUtil {
 
 	static {
 		try {
+			/*
+			 * //Load Properties file info to java.util.Properties class obj Properties
+			 * props = new Properties(); InputStream is = new
+			 * FileInputStream("src/main/java/hibernate.properties"); props.load(is);
+			 */
 			// Configuration object
 			Configuration cfg = new Configuration();
 //			cfg.configure(); //Even if we don't call now not a issue.
-			cfg.addFile("src/com/kc/entity/Product.hbm.xml");
-
+			cfg.addFile("src/main/java/com/kc/entity/Product.hbm.xml");
+			
 			// build SessionFactory
 			factory = cfg.buildSessionFactory();
 		}catch (HibernateException he) {
