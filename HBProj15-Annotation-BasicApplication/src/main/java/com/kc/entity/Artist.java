@@ -7,6 +7,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.DynamicInsert;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -14,6 +16,7 @@ import lombok.Data;
 @Table(name="ARTIST")
 @Data
 @AllArgsConstructor
+@DynamicInsert(value = true)
 public class Artist implements Serializable {
 	@Id
 	@Column(name = "AID")

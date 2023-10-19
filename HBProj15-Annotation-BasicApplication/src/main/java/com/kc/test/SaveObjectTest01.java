@@ -19,12 +19,12 @@ public class SaveObjectTest01 {
 			//Begin Tx
 			tx=ses.beginTransaction();
 			//Prepare object
-			Artist artist1= new Artist(7,"Dhoni","India",7777777l,"Cricketer");
-			Artist artist2= new Artist(18,"Kohli","India",18181818L,"Cricketer");
-			Artist artist3= new Artist(101,"Hrithik","India",12121212l,"Actor");
+			Artist artist1= new Artist();
+			artist1.setName("Vijay");
+			artist1.setAddress("Hyderabad");
+			artist1.setCategory("Actor");
+			artist1.setAid(1011);
 			ses.save(artist1);
-			ses.save(artist2);
-			ses.save(artist3);
 			tx.commit();
 			System.out.println("Record inserted...");
 		}
