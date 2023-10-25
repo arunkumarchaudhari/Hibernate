@@ -9,13 +9,11 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.DynamicInsert;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Entity
 @Table(name="ARTIST")
 @Data
-@AllArgsConstructor
 @DynamicInsert(value = true)
 public class Artist implements Serializable {
 	@Id

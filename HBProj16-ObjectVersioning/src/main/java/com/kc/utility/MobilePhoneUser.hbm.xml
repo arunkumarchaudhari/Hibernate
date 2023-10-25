@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.kc.entity.MobilePhoneUser"
+		table="MOBILE_PHONE_USER">
+		<id name="regNo" column="regNo">
+			<generator class="increment" />
+		</id>
+		<version name="updationsCount" type="integer"/>
+		<property name="mobileNo" />
+		<property name="prepaid" type="boolean" />
+		<property name="circle" type="string" length="20" />
+		<property name="callerTune" type="string" length="20" />
+	</class>
+</hibernate-mapping>
+
+
+
+ 
