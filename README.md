@@ -5,6 +5,7 @@ To work with these project [ if not developed in maven] you must have following 
 => Oracle drive
 => MySql driver
 => Hibernate jar files.
+=> lombok jar
 
 Thanks and Regards,
 Arun Kumar Chaudhari
