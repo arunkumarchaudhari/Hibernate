@@ -1,0 +1,2388 @@
+Hibernate Notes:::
+==================
+Reference code:: https://github.com/natarazworld/NTHB916REPO
+MyCode:: https://github.com/arunkumarchaudhari/Hibernate
+
+=> In Java Programming JDBC, Hibernate, Spring JDBC, spring ORM, spring data JPA are given to develop
+   persistence logics to perform persistence operation.
+
+L3
+Persistence::
+	=> The process of storing and managing data for over the period of time(long time)
+	   is called persistence.
+
+Persistence Store::
+	=> The place where data will be stored on permanent basis to achive persistence is called persistence store.
+
+Need of Persistence??
+	=> The data stored in App variables, collections, arrays and objects allocated memory in the JVM memory of the RAM and
+	   this memory wil lbe vanished at end of the application execution.
+	   To overcome this problem we need persistence concept in our Project.
+	
+Persistent Data::
+	=> The data stored in persistence store is called Persistent Data.
+	eg:: Content of file
+		Db s/w managed DB table records.
+
+Persistent Operation::
+	=> The CRUD operation performed on persistent data of persistence store
+	   are called Persistence operation.
+		C->create(insert)
+		U->update(modify)
+		R->Read(select)
+		D->Delete(remove)
+
+Persistence logic::
+	=> The logic using which we perform persistence operation is called persistence logics.
+	eg:: JDBC code, Hibernate Code, Spring JDBC code etc...
+
+Persistence technology/framework/API::
+	=> The Technology/framework/API using which we can develop persistence logics is called
+	   Persistence technology/framework/API
+	eg:: IOStreams(API)
+	     JDBC(Technolog)
+	     Hibernate
+	     Spring JDBC
+	     etc....
+	=> In JAVA language API means set of classes, interfaces, enums, annotations that comes in the form of packages.
+	=> JAVA languagae/technology/framework gives pre-defined and also allows to use 
+	   third party apis and to develop user-define apis.
+	=> Generally APIs in java are also called as Libraries and they comes in the form of jar files.
+
+==> Persistence technology/framework/API is given for developing persistence logics to perform Persistence operation on 
+    the Persistence data of Persistence store.
+
+
+L4
+--
+
+Limitation of JDBC Technology to develop Persistence logics::
+=============================================================
+	a) JDBC Persistence logics need SQL queries and the SQL queries are DB s/w dependent
+	   Queries. So JDBC Persistence is DB s/w dependent persistence logic.
+	b) JDBC persistence logic is not portable accross the multiple DB s/w.
+	   i.e, changing DB s/w in the middle of the Project development and in the middle of the 
+	   Project production is very complex.
+
+	c) While assigning values to SQL queries, we can't use Java objects as inputs. We need to
+	   convert Java object data into simple values in order to set them as input values 
+	   to sql queries.
+	  Eg::
+	  	Student st= new Student(1800,"Arun","NPL",90.21);
+
+		//create JDBC con
+		//Create Prepare statement obj
+		PrepareStatement ps = con.prepareStatement("INSERT INTO STUDENT VALUES(?,?,?,?)");
+		ps.setObject(st); //-->This method is not there in JDBC
+		ps.setInt(1, st.getSno());
+		ps.setString(2, st.getName());
+		 .....similar for others
+		
+		=(problem)>To set Student obj data to query params the values are retrived from objects
+		  to simple values and set the SQL query parameters(?)
+		
+	d) JDBC API methods throw SQLException which is a checked exception so it forces the
+	   programmers to catch and handle exception.
+	    (for unchecked exception->exception handling is optional)
+	
+	e) For all problems of JDBC code execution same SQLException will come.. Differentiating the problem
+	   is very difficult.
+
+	f) In real time all projects are layered applications. i.e, keeping different logics in different classes that
+	   are talking with each other.
+
+		class1 -------->class2------->class3------------->class4-------->db s/w
+		(client)					   (JDBC code)
+	     --> Since JDBC SQLException is checked exception, we generally catch and handle the exception
+	      using try/catch block. Suppose client is giving input from class1 and JDBC code is written in class4.
+	      So once exception will come it will go to finally block of class4, but client is waiting for the o/p
+	      in class1.
+		
+	     NOTE: Generally we don't catch and handle unchecked exceptions so they automatically support exception propagation.
+	     NOTE: To make checked exception supporting exception Propagation do not catch and handle exception just declare the exception
+	           to be thrown using "throws".
+
+
+	g) JDBC ResultSet obj is not Serializable object. So we can not send that object data over the network.
+	   (we can send only serializable objs over the network. and object becomes serializable obj only when
+	    its class implements java.io.Serializable(I))
+
+	h) For all kinds of SELECT SQL queries execution, we need to process and ResultSet obj in different
+	   manner which is bit complex...
+
+	i) Does not give default cache support b/w Java App and DB s/w to reduce network round trips accross the
+	   multiple same requests with same inputs.
+
+	j) No support of Dynamic schema generation i.e, can not generate db tables, view, sequences and etc..dynamically
+
+	k) No Built-in ID generators are supplied to insert values into PK column dynamically...
+
+	l) No built-in support for record versioning and timestamping
+		Record versioning:: keep track of how many times that each record is modified.
+		Record timestamping:: Keep track of when the record is inserted and lastly updated.
+
+===>To solve most of the above problems use ORM persistence logic using ORM s/w like Hibernate.
+
+L5
+--
+What is O-R-Mapping??
+=====================
+Single line statement:: It is the process of mapping/linking java clases with DB table.
+
+Definition::
+	=> The process of mapping java classes with db tables and the properties of java classes
+	   with the columns of Db tables and making the object of java classes representing/poinint the records of Db table
+	   having synchronization is called o-r mapping.
+	
+	NOTE: synchronization b/w objects and DB tables rows is nothing but the modifications done in 
+	      objects data will reflect to Db tables rows and vice-versa.
+
+
+Q) In o-r mapping each record is represented by an object. If Db tables is having huge number of records
+   then huge no. of objects will be created. Which may lead system crash. How do you Justify this statement?
+Ans::
+	ORM s/w does not create objects for entity classes. If records are present in Db tables..
+	Actually the objects entity classes will be created only when records of db tables are selected.
+	Selecting hube number of records from db tables at time is not ORM s/w problems.
+	that is programmer's mistake. So while working with ORM s/w we should retrive the records of DB 
+	tables, part by part ...not at a time.
+
+Q) How mismatches b/w Java and RDBMS Db s/w will be resolved?
+Ans::
+	ORM s/w is even responsible to resolve these matches by providing advanced o-r mappings
+	like inheritance mapping, component mapping, collection mapping, association mapping and etc...
+		(All these are enhancement of basic o-r mapping)
+
+	Inheritance mapping:
+		=>Java Entity clases can be there in inheritance. but db tables can not be there in inheritance
+		  So to mapping java classes of inheritance with one or more db tables we need special inheritance mapping
+	
+	Component mapping:
+		=>Java Entity clases can be there in composition(HAS-A relationship). but db tables can not be there in Composition
+		  So to mapping java classes of Composition with one or more db tables we need special Component mapping
+
+	Collection mapping:
+		=>Java Entity clases can be taken having List/Set?map as the collection properties. But Db table does not support
+		  collections. So mapping java clesses with collection properties to Db tables needs the special collection mapping. 
+
+	Assiciation mapping:
+		=> DB tables will be kept in association using FK cols. Java does not support FK cols.. but java entity classes 
+		   can be placed in relationship using composition and collections..So mapping java clesses relationship with
+		   DB tables in relationship needs the special "Association mapping".
+
+	List of ORM s/w or Tools or Frameworks::
+	---------------------------------------
+	Hibernate -----> from SoftTree(RedHat)	[1]
+	Eclipse Link --> from eclipse		[2]
+	IBatis -------->from apache		[3]
+	etc...
+
+		
+L6
+--
+Q) Is JDBC outdated? If not outdated where should we use JDBC and where should we use
+   ORM framework like hibernate to develop the persistence logic.
+
+Ans:: JDBC is not outdated... It is in utilization directly in projects.. and all ORM frameworks
+      internally use JDBC code to complete persistence operations when Programmers gives 
+      objects based persistence instructions to ORM s/w.
+
+      => Spring JDBC internally uses plain JDBC code.
+      => SPring ORM internally uses one or another ORM f/w internally to develop the persistence logic.
+      => Spring Data JPA internally uses Hibernate ORM f/w internally to develop the persistence logic.
+	
+NOTE::: If application is getting huge amount of data to process batch by batch, use JDBC, else prefer hibernate.
+
+    Census (Population count)
+    -------------------------
+    	1. Collect family details
+	2. Write to paper
+	3. Feed into excel sheet
+	4. Excel sheet upload into central Govt website.
+	5. Excel sheet downloading
+	6. Uploaded to Batch processing Application
+	7. After data verification, correction and categorization->Inserted into DB s/w.
+		->From excel sheet the batchProcessingApplication gets huge amount of data batch by batch.
+		  So if we use ORM s/w like hibernate in the App, then huge no. of objects Entity classes will
+		  be created based on batch size. Due to this Application may crash
+		  -> So use JDBC in the place of ORM f/w..JDBC creates only 1 ResultSet object representing huge no. of record 
+		     are coming as a batch. Memory issue may not come...
+Conclusion::
+	=> If application is getting huge amount of data batch by batch for processing, prefer JDBC not the ORM f/w.
+	   eg:: IRCTC App, Census App etc..
+	
+	=> If app is getting less amount data at a time to get processed then prefer ORM s/w like hibernate because to manipulate
+	   less amount of records at a time we need less objects for entity class.
+	   more over we can apply other features of hibernate like Db portability, caching, versioning, timestamping,dynamic schema generation and etc..
+	   NOTE: Here using JDBC does not allow to enjoy other benefits of hibernate like caching and etc... But we can use JDBC(if we want)
+	Eg:: website, banking Application, Gaming Application and etc....
+
+
+L9
+--
+
+Different types of Java Frameworks based on Kind of Applications we develop
+---------------------------------------------------------------------------
+	a) Web application/ MVC frameworks
+	b) ORM frameworks/Persistence frameworks
+	c) WebServices Frameworks
+	d) BigData Frameworks
+	e) Application Framework/JEE Framework
+
+
+	a) Web application/ MVC frameworks
+		=> Provides abstraction on servlet, jsp technologies and simplifies
+		   MVC architecture based web application development
+		struct --->from apachi
+		JSF    --->from sun MS(oracle corp) [3]
+		Spring MVC-> from interface21/pivotal [2]
+		Spring Boot MVC-> from interface21/pivotal [1] (1 and 2 combine 95%)
+		webwork ----->from open symphony
+		ADF    ----> from oracle corporation
+		etc...
+	
+
+	b) ORM frameworks
+		=> Provides abstraction on JDBC technology and simplifies the development of objects based
+		   o-r mapping persistence logic development.
+		Hibernate -> from softTree/RedHat [1] ->80 to 90 %
+		Eclipse link -> from Eclipse [2]
+		Ibatis -->from apache [3]
+		etc....
+
+	c) WebServices Frameworks
+		=> Webservice environmet acts as specification to develop distributed application
+		   in any domain (java, .net, php etc..) having interoperability(The distributed application
+		   developed in one language can be consumed/called in another language application)
+		   For eg:: The webservices component/Application developed in Java can be consumed in .NET, PHP and vice-versa.
+		   eg: Google pay, wether report component etc...
+	
+	d) BigData Frameworks
+		=> The data that is beyond storing and processing capacity is called BigData.
+		   FB data, Youtube data, Google data etc...
+		NOTE:: BigData can't be managed by using regular RDBMS Db s/w and using regular computer and their HDDs
+		
+		Hadoop ---> from apache
+		Spark ----> from apache
+
+
+	e) Application Framework/JEE Framework
+		=> Provides abstraction on multiple Java, JEE Technologies like JDBC, Servelt, JSP, JTA and etc..
+		   and simplies all kinds of Java, JEE application development..
+		=> These framewrok can be used to develop stand alone application, web application, and distributed application.
+		=> These framework can be used to develop persistence logics, business logics/service logics,
+		   persentation logics, intergation logic and etc...
+
+		   Persistence logics:: CURD operation on Db s/w
+		   b.logic/service logic:: Calculations, sorting, filtering, data validations and etc..
+		   presentation logics:: The logics that provide user-interface to enduser to supply inputs and to display results.
+		   Intergration logic:: The logic that makes the standalone application/web application interacting distrubuted app
+		    [logic that required to make flipkart.com interacting with Gpay,Paytm]
+
+		eg: Spring --> from interface21/pivotal
+		    Spring Boot -> from interface21/pivotal
+
+
+Based on the mode of programming we do, there are two types of Java frameworks::
+--------------------------------------------------------------------------------
+	a) Invasive Frameworks
+	b) Non-invasive Frameworks
+	
+	a) Invasive Frameworks
+		=> {marriage commetement, joining company with bond}
+		=> Here the classed developed as part of Framework based application development either implements or extends
+		   from framwork api interfaces or classes and makes the application and its classes as tightly coupled components
+		   of framwork api i.e, we can not more application classes to another framework for execution.
+		EG:: Struts
+
+	b) Non-invasive Frameworks
+		=> {living together without marriage->stay together untill comfirtable, joining company without bond}
+		=> Here the classes developed as part of framwork based application development does not implements and extends framwork
+		   api interfaces and classes and makes the App and its classes as loosely coupled components of framework api i.e., we can
+		   move app classes to another framework for executions..
+		eg:: Spring, hibernate, webservices.
+
+L12(june2)
+---
+
+=> In o-r mapping the ORM s/w like hibernate is responsible to achive synchronization b/w the objects 
+   of entity classes and the records of Db tables.
+   ->Here synchronization means the modification done in the objects of Entity classes will reflect
+     to Db table rows and vice-versa.
+
+NOTE:: Though Db table is not having PK or UK constraint...but related Entity class cfg in o-r mapping cfgs
+       must cfg id field because id field cfg in the Entity class cfg is mandatory.
+
+Components or files required to develop o-r mapping persistence logic (using Hibernate and xml driven cfgs)::
+=============================================================================================================
+
+	a) Entity classes to map with Db tables and to develop objects based o-r mapping persistence logics
+	   in the underlying java application/client App to Db s/w(standalong app/web app/ distributed app)
+		=> Here client App is not client to HB f/w... it is client to Db s/w using Hibernate persistence logic
+		   
+	b) Hibernate cfg file(xml file):: contains JDBC driver details, DB s/w details(like userName, password etc) to locate
+	   and establish connection b/w underlying Application and db s/w. This file also contains instruction to hibernate
+	   framework like enabling and disabling caching, auto commit, showing internally generated sql queries, Dynamic schema(db table) generation and etc...
+	
+	=> We can take any <filename>.xml as hibernate cfg files. If no file name is given then it takes "hibernate.cfg.xml" from CLASSPATH(src folder of Eclipse project)
+	   of as default hibernate cfg file name.
+
+	=> We generally take this file 1 per db s/w basis. For example if HB app wants to talk with 2 Db s/w at a time then we take two no. of hibernate cfg files.
+
+	=> While BootStrapping hibernate(while activating hibernate by creating some basic objects) we need to specify
+	   the name and location of hibernate cfg file if it is not placed in default location(CLASSPATH - src folder)
+
+	=> All details in hibernate cfg file must be given as the values of fixed keys.
+
+NOTE:: In annotation driven hibernate cfgs also we need to use xml file as the hibernate cfg file to enjoy the flexibility of modifications.
+NOTE:: We can also supply the above hibernate cfg details either using properties file or directly using java code but xml file bassed HB configuration
+       are industry standard and recomanded to use.
+
+	=> The hibernate configuration property names are fixed but values will be changed based on the DB s/w and JDBC driver s/w we use.
+	=> In hibernate, spring cfgs files(xml files) we need to use only those tags and attributes that are given by spring, hibernate s/w as DTD/XSD rules/docs.
+		DTD:: Document Type Definitation (old)
+		XSD:: Xml Schema Definitation(latest)
+
+L13(june3)
+---
+
+	c) Hibernate Mapping File (xml File)
+	====================================
+		=> Any <fileName>.xml can be take as hibernate mapping file name.
+		=> We generally take Hibernate mapping files on 1 per Entity class basis
+		=> There is no default file name for hibernate mapping file
+		=> All mapping file names must be specified in HB cfg file...using <mapping> tags
+		=> Generally the mapping file names will have following notation
+			<fileName.hbm.xml
+			eg:: Student.hbm.xml, Employee.hbm.xml etc....
+		=> This file contains different types of o-r mappings.
+			a) Basic o-r mapping (mapping Entity classses with db tables, Properties of Entity classes with cols of Db tables, Id field cfg, and etc...)
+			b) Inheritance mapping (When entity classes are there in the inheritance)
+			c) Component mapping (When entity classes are there in the Composition)
+			d) Collection Mapping (When entity classes are having collection type properties)
+			e) Association Mapping(When entity classes are there in 1-1, 1-Many,Many-1, Many-Many relationship)
+			and etc...
+		
+		=> Solves the mis matching b/w Java and DB s/w through o-r mapping cfgs.
+
+	NOTE:: Annotation driven cfgs of Hibernate...there is no nee dof HB mapping files(xml files)
+	       seperately because we add mapping annotations directly in Entity classes.
+
+
+L14(june7)
+---
+
+=> BootStrapping of hibernate is all about activating HB f/w by collection Hibernate API jar files from the BUILDPATH or CLASSPATH.
+   In this process we need to create 3 important objects using hibernate api...as base objects and these objects will
+   be used later provides Entity classes objects based persistence instructions to hibernate f/w from client app.
+
+
+3 Important Objects of Hibernate Persistence Logic Development ::
+=================================================================
+	a) Configuration class object
+	b) SessionFactory Object
+	c) Session Object
+
+	a) Configuration Class Object::
+	-------------------------------
+		=> When this object is created, the hibernate framework's activation process/bootstrapping starts/begins by 
+		   collecting HB libraries/jar from BUILDPATH or CLASSPATH.
+		=> It is base to create SessionFactory object by taking given or default hibernate cfg file(xml) and the specified
+		   mapping files(xml)/mapping annotation entity classes (java beans).
+			   
+			   //Initiate BootStrapping of HB f/w
+			Configuration cfg = new Configuration();
+			
+			//Specify Hibernate cfg files directly and mapping files/mapping annotation classes indirectly
+			cfg.configure(".../hibernate.cfg.xml"); //Takes specified file name from specified location as the hibernate cfg file name
+			(or)
+			cfg.configure(); //takes hibernate.cfg.xml from CLASSPATH("src" folder of eclipse project as default hibernate cfg file)
+
+		NOTE: we need not to pass hibernate mapping file names(xml) or mapping annotation classes(Entity classes with mapping annotations)
+		      seperately in the App because their names are specified inside the hibernate cfg files, So they will be pickedup from that
+		      file automatically while creating SessionFactory using Configuration class object.
+
+		=> It is object of org.hibernate.cfg.Configuration(c) class
+
+	b) SessionFactory Object
+	------------------------
+		=> Collects given hibernate configuration file details, mapping files/mapping annotations details by taking
+		   hibernate cfg file name from configuration object and creates the below given services first and uses them while constructing SessionFactory object.
+
+		   Services are::
+		   	-> Datasource object representing JDBC connection pool (connection provider service)
+			-> Dialect object (This is capable of generating SQL Queries based on given objects based persistence instructions)
+			-> Cashing Service (To maintain Entity class objs for reusability)
+			-> Generator class object (To generate PK col/id field values dynamically)
+			and etc....
+		
+		=> SessionFactory object means it is the object of HB API/Library supplied java class that implements org.hibernate.SessionFactory(I)
+		NOTE:: we always refer SessionFactory object using common org.hibernate.SessionFactory(I) reference variable to achieve loose coupling 
+		       even though class name is changing for every version of hibernate.
+		
+		Code to create SessionFactory obj
+		---------------------------------
+			SessionFactory factory= cfg.buildSessionFactory();
+
+		=> SessionFactory object is factory or bbase to create HB session obj. So we can say SessionFactory is designed based on Factory DP.
+		    [Factory DP creates/return one of the several related classes object based on the data that is passed..in this process it also 
+		      provides abstraction on object creation process]
+
+		=> It is heavy weight object in Hibernate Persistence logic development because it internally contains multiple small objects.
+		=> It is immutable object i.e, once we set data to this object, we can't modify that data.
+		=> It is thread safe objects by default because all immutable objs are thread safe objs by default.
+		=> Configuration, SessionFactory objects are long lived objs Hibernate App because they will be created on one per DB s/w basis
+		   and will be used for all the persistence operation.
+
+		=> Once the SessionFactory object are closed, all the services associated with this object will be stopped/nullified and 
+		   also deactives the hibernate framework.
+
+	Q) How did you active/bootstrap Hibernate f/w ?
+	Ans) By creating Configuration class object.
+
+	Q) How did you deactivate/stop Hiberante f/w ?
+	Ans) By closing SessionFactory Object.
+
+	
+	c) Session Object (Connection ++(means many thing))
+	-----------------
+		=> It is bridge/mediator object b/w Client App or developer and Hiberante f/w to provide object based
+		   persistance instruction to hibernate f/w.
+		
+		To create Session Obj
+		---------------------
+			Session s = factory.openSession();
+
+		=> Session obj means it is the object Hibernate f/w supplied java class that implements org.hibernate.Session(I)
+		     (We always refer Session obj using org.hibernate.Session(I) referecne varaiable for loose coupling)
+
+		=> The factory.openSession() method collects one JDBC connection object from JDBC connection pool of 
+		   DataSource object which is holded by SessionFactory object and adds mapping file, mapping annotation information
+		   while creating and returning Session object.. So we call Session obj as Connection ++.
+		
+		=> It is mutable obj
+		=> It is not thred safe object by default
+		=> It is short lived object because we take this object either on 1 per persistence operatoin or on 1 per related persistence operations.
+		=> All persistence instruction to Hibernate f/w having data in Entity class objects will be given with the support of HB session obj.
+
+	In Client app/DAO Class
+	-----------------------
+		//Activate Hibernate Framework
+		Configuration cfg= new Configuration();
+		//Specify HB cfg file
+		cfg.configure("/com/nt/cfgs/hibernate.cfg.xml");
+		//Build SessionFactory
+		SessionFactory factory = cfg.buildSessionFactory();
+		//create Session object
+		Session ses= factory.openSession();
+
+
+L15(8june)
+--
+
+Persistence Operations in HB
+============================
+	1) Single row operations
+	------------------------
+		=> Can manipulate 1 record at a time.
+			ses.save(-)
+			ses.persist(-) //To save obj(insert record)
+
+			ses.update(-)
+
+			ses.merger(-)
+			ses.saveOrUpdate(-)
+
+			ses.delete(-)
+
+			ses.load(-)
+			ses.get(-,-)
+
+			ses.refresh(-)
+
+	2) Bulk Operations
+	------------------
+		=> Can manipulate 1 or more records at a time.
+			->HQL/JPQL Queries
+			->Native SQL queries
+			->HB Criteria API/HB QBC (deprecated from HB 5.2.x)
+			->JPA Criteria API/JPA QBC
+
+NOTE:: All non-select operations(insert,update,delete) in hibernate must be executed as Transactional statements i.e,
+       they must be surrounded with Begin Tx, commit Tx, rollback Tx activity.
+
+
+Hibernate Definition
+====================
+	=> Hibernate is an open source, hight weight, easily integratable Java based ORM framework
+	   given based JPA specification to develop objects based o-r mapping persistence logic as DB s/w
+	   independent persistence logic providing abstraction on JDBC Technology.
+
+
+L16(10june::FirstApp->coding)
+		
+L17(11june)
+---
+
+<property name="hibernate.show_sql">true </property>
+	->To see the hibernate code generated for the operation performed.
+	->It will show in single line, now to see it in formatted log message we have another property(format_sql)
+		<property name="hibernate.format_sql">true </property>
+
+NOTE:: Word hibernate in property name is optional, we can write name without hibernate keyword also.
+
+=> Hibernate cfg files contains 4 types of properties/details::
+	a) connection properties (useful to locate and establish the connection with db s/w)
+	b) hibernate properties (gives instructions to HB f/w like show_sql, format_sql, dialect and etc..)
+	c) Misc Properties
+	d) Mapping files(xml)/mapping annotation classes
+
+
+Q) Can I perform non-select Persistence operation using Hibernate as a non-transactional Operation?
+	Ans) Possible using session.flush() method...but not recommended because we can not perform transaction management(combining related multiple persistance operation
+             and executing them by applying do everything or nothing principle)
+
+
+=> session.flush() makes HB f/w to complete pending persistence instructions that are there given to session obj.
+   even tx.commit() method internally uses session.flush() method apart from calling con.commit() method.
+
+=> Flushing is the process of synchronizing persistence instructions given to Session object reflecting to underlying Db s/w.
+
+=> If we are dealing with single non-select persistence operation we can manage with ses.flush without any tx management...
+   otherwise it is always recommended to work with TransactionManagement like Begin Tx, commit Tx, rollback Tx and etc...
+
+**=> ses.save(-), ses.delete(-), ses.update(-) and etc.. methods give non-select persistence instructions to HB f/w...
+     and HB f/w completes those Persistence instructions by generating JDBC code + SQL query only when ses.flush() or tx.commit() method is called.
+
+NOTE:: From Hibernate 5.x onwards, transaction management is mandatory for non-select persistence operation,
+       but upto Hiberate 4.x, the same thing can be done without using Transaction management, just by using ses.flush() method.
+
+
+
+L18 (12june)
+------------
+
+=> If Xml/doc is satisfying syntax rules then it is called well-formed XML document
+
+Syntax rule::
+-------------
+	a) tags and attributes are case-sensitive
+	b) Every Open tag should have closing tag
+	c) Tags must be nested properly
+	d) we need to follow naming rules tags and attributes.
+	d) First tag is called root tag and once this root tag is closed, we can not place any other info after that.
+	and etc...
+
+=> If xml file/doc is satisfying imported DTD or XSD rules then it is called valid xml document.
+
+=> Xml Parser is s/w Application that performs multiple operations on the given XML file
+	a) Load XML document/file from the specified path of File system into Application's RAM memory(in case of Java: JVM memory)
+	b) Checks whether xml document/file is well-formed or not and valid or not:parsing xml document(if not throws the exception)
+	c) Creates inMemory metaData of Xml document in the Application's memory(In case of Java: JVM memory of the RAM) for 
+	   faster Reusability of Xml file content in the Application's execution for multiple times.
+	d) 
+
+
+Flow of First Application(link in github[1st Proj pushed])
+=========================================
+-> Since our First Application is stand along Application..the flow start with main(-) and ends at the end of main(-) method.
+	
+	Configuration cfg = new Configuration();
+		--> Activates hibernate f/w throught 0-param constructor by gathering HB jar files(libraries) from CLASSPATH/BUILDPATH
+		--> In this process multiple details about current system and active java version will also be stored into configuration object.(print cfg.getProperties() to see it)
+		--> This object also maintain PATH,environment variable values, jar files added to CLASSPATH env variable.
+
+	cfg.configure("/com/kc/cfgs/hibernate.cfg.xml");
+		--> loads given hibernate cfg file from the specified path of File System--> checks wellformed or not and 
+		    valid or not(if not throw exception) --> Generates inMemory Metadata of hibernate cfg file in the 
+		    JVM memory where the current application is running(RAM) ->The info gathered from hibernate cfg file
+		    will stored into configuration object.
+		NOTE:: At this level no perations takes on hibernate mapping files though their names are specified in hibernate cfg file.
+
+	
+	cfg.configure(); ->for this, place hibernate.cfg.xml file in src folder
+		-> Same as above..takes hibernate.cfg.xml as the default HB cfg file from
+		   CLASSPATH folder("src" folder of Eclipse Java Project is added to CLASSPATH by default)
+		
+L19 (15june)
+------------
+
+	SessionFactory factory= cfg.buildSessionFactory();
+		-> This method is designed based on builder Design pattern which constructs
+		   the complex SessionFactory object by adding/combining small objects
+
+		cfg.buildSessionFactory() method performs the following activities
+			-> Loads mapping files specified in "hibernate.cfg.xml: file and checks whether they are
+			   well-formed or not and valid or not. If not exception will be throwm.
+			   If they are well-formed and valid then inMemory MetaData of mapping files will be created
+			   in the RAM where application is running(JVM memory of the RAM).
+			
+			-> Creates multiple services and their related object based on the configuration done in
+			   hibernate configuration files and mapping files.
+				--> Dialect object [To generate sql queries]
+				--> Connection Provider [DataSource pointing to builtIn-JDBC con pool]
+				--> Transaction services [To manage commit or rollback activities either using JDBC Transaction service(default) or JTA Tx Service]
+				--> Generator class object [To generate Id value for Entity object dynamically]
+				and etc...
+			
+		SessionFactory obj means.. It is the object of underlying HB f/w supplied java class that implements org.hibernate.SessionFactory(I) directly or indirectly
+			SessionFactory factory= cfg.buildSessionFactory();
+			System.out.println(factory.getClass());
+
+	
+	Session ses= factory.openSession();
+		-> This method is designed based on Factory Pattern because it provides abstraction on "session object" creation process.
+
+		factory.openSession() method perform the following operations
+			a) Collects one jdbc connection object from JDBC connection pool through DataSource obj represented by
+			   ConnectionProvider service of SessionFactory
+			b) Adds First level cache as Map collection to Session object
+			c) Gathers inMemoryMetaData of mapping files
+			d) Gathers dilect object from SessionFactory
+			e) having all the above object, it creates and returns Session object
+			    (so we can say session object is connection++[connection is jdbc connection --recall])
+
+	
+							
+=> Hibernate Application uses, hibernate f/w supplied built-in JDBC connection pool by default(Min size is 1 and Max size is 20). And allows to use 
+   Different third party and server managed jdbc connection poos
+
+If the Hibernate code is placed in Standalone Application then use
+	-> Hikari CP
+	-> apache DBCp2
+	-> C3PO
+	-> Proxool
+	-> Vibur
+	and etc...
+
+If hibernate code is placed in web applications or distributed Applications then use
+	->server managed jdbc connection pools
+	eg::	Tomact managed jdbc connection pool
+		Weblogic managed jdbc connection pool
+		Wildfly managed jdbc connection pool
+
+
+What is the Difference between SessionFactory and Session object??
+
+	SessionFactory object
+	----------------------
+	-> Heavy object containing multiple services
+	-> It is given as Factory to create Session objects
+	-> It is immutable object.[Object data can't be modified]
+	-> It is thread safe object by default.
+	-> It is taken as 1 per Db s/w basis.
+	-> Maintains optional second level cache/L2 cache.
+	-> The configuration done in hibernate configuration file and HB mapping file will create
+	   multiple services into SessionFactory object.
+
+
+	Session Object
+	--------------
+	-> Light weight object having less services
+	-> It is base object for programmer/application to give
+	   objects based persistence instructions to hibernate
+	-> It is mutable object.
+	-> It is not thread safe by default.
+	-> It is taken as 1 per each persistence operation (or) 1 per related persistence operations.
+	-> Maintains the mandatory First level cache/L1 cache
+	-> Uses most of the services by collection them from SessionFactory object.
+
+
+
+
+L20(16June)
+-------
+
+	Transaction tx = session.beginTransaction();   signature:: public Transaction beginTransaction()
+	--------------------------------------------
+	=> Begins Transaction by disabling autoCommit mode on underlying Db software.
+	=> By default it uses JDBC for transaction management.
+	=> Internally calls con.setAutoCommit(false) to begin the transaction.
+	
+	=> Hibernate can use either JDBC or JTA for transaction management. By default
+	   it uses JDBC, to change to JTA we need to add extra instruction in hibernate.cfg.xml file
+		<property name="hibernate.transaction.factory_class"> org.hibernate.transation.JDBCTransactionFactory </property> [default->to work with JDBC transaction]
+		<property name="hibernate.transaction.factory_class"> org.hibernate.transation.JTATransactionFactory </property>
+
+	NOTE:: Transaction object in hibernate is nothing but.. it is object of underlying Hibernate f/w supplied java class that
+	       implements org.hibernate.Transaction(I).
+
+	=> Hibernate provides unified API providing abstraction on JDBC, JTA model Transaction Management code i.e, we can make hibernate using 
+	   JDBC transaction management or JTA transaction management by writing small entity in hibernate cfg file without changing the code of Hibernate Tx.
+
+	
+
+
+	int idVal=(int)ses.save(product);
+	---------------------------------
+	System.out.println(idVal);
+		
+		=> Here ses.save(product) method performs the following operations
+			a) Takes the given entity object and identifies id field from mapping file.
+			b) Gives save object persistence instruction to Hibernate f/w
+			c) Keeps the received object of Entity class in the first level cache/L1 cache.
+			b) gathers assigned/generates id value from id property and returns back to client application as Serializable object
+			   NOTE:: All wrapper class objects are serializable objects by default.
+			
+		Signature of ses.save(-) method::
+		public Serializable save(Object obj)
+
+		
+		AutoBoxing::   The process of converting simple value to object(wrapper object) automatically.
+		AutoUnboxing:: The process of converting object(wrapper object) to simple value automatically.
+
+	NOTE:: ses.save(-) does not sends and executes insert SQL query in Db s/w, it just gives save object
+	       persistence instruction to HB f/w.. the actual persistence operatoin takes place when tx.commit() is called.
+
+	=> If the id generator is configure using <generator> tag then ses.save(-) methods returns the generated id values
+	   back to client Application otherwise it returns the value assigned to id property as the id value back to application.
+	   
+	   In mapping file
+	   ---------------
+		<id name="pid" column="PID">
+		  <generator class="increment"/>
+		</id>
+
+
+
+	tx.commit();   Signature:: public void commit()
+	============
+		a) collects objects of Entity classes that are there in L1/first level cache on
+		   which pending persistence operations are marked.(Internally calls ses.flush()).
+		   (like the object given by ses.save(-) and other method calls)
+
+		b) Takes the persistence instruction given to hibernate f/w like save object instruction by
+		   calling ses.save(-) method
+
+		c) Generates and uses SQL query to complete Persistence instruction like insert SQL query for ses.save(-)
+		   method. Sends and executes the query in DB s/w to complete persistence operation(like inserting record)
+
+		d) calls con.commit() [JDBC tx] or ut.commit() [JTA Tx] to commit the changes happened in DB s/w.
+
+
+	tx.rollback();    Signature:: public void rollback()
+	==============
+		=> calls con.rollback() method[JDBC Tx] or ut.rollback()[JTA Tx] to undo changes happened in Db s/w.
+	
+
+	ses.close();
+	============
+		=> Closes the session with Db s/w from Hibernate application.
+		=> Internally calls con.close() to release JDBC connection object
+		   back to JDBC connection pool
+		=> Vanishes L1/First Level cache by destroying objects in it.
+		=> returns the released connection object back to client Application(return type of this method is Connection)
+
+	factory.close();
+	================
+		=> Destroys the sessionFactory i.e, deactivates the HB f/w releasing 
+		   multiple service/resources that associated with SessionFactory object
+		   they are jdbc connection pool, L2 cache/SecondLevelCache, Dialect service,
+		   and etc..
+		
+		NOTE::: First close all active session objects before closing SessionFactory object.
+
+
+L21(17 June)
+-------
+
+=> To perform save object operation we can use either ses.save(-) or ses.persist(-) method.
+
+ses.save(-) method signature
+	public Serializable save(Object obj)
+		
+		=> Since parameter type is java.lang.Object we can pass any java class(Entity class) obj as the arg value
+		=> We generally take either simple data type or wrapper data type or String data type property as identity property/id field i.e,
+		   save returns the generated/gathered id value either in the form of Wrapper class obj or string class obj...Since All Wrapper class and 
+		   string class are implementing java.io.Serializable. The Serializable(i) is given as the return type.
+
+ses.Persist(-) method signature
+	public void persist(Object obj)
+
+
+Q) What is the difference between ses.save(-) and ses.persist(-) method??
+
+	ses.save(-) method
+	------------------
+	a) Gives save object persistence instruction to hibernate
+	   and return either generated or gathered id value.
+	b) Supports to work with different id Generators like increment,
+	   sequence,hilo and etc..to generate id value for the id field.
+	c) return type is java.io.Serializable that means returns the gathered 
+	   or generated id value as the Serializable object(either wrapper class obj or String class obj)
+	d) It is direct method of hibernate specification i.e, not kept in hibernate 
+	   api based on JPA Specification.
+	e) Used very frequently in the real project.
+
+	ses.persist(-) method
+	------------------
+	a) Gives save object persistence instruction to hibernate
+	   and does not return either generated or gathered id value.
+	b) Does not support ID generators.. so always takes the assigned
+	   value as the id value.
+	c) Return type is void i.e, does not return any id value
+	d) It is given in Hibernate API based on JPA specification
+	   rules and guidlines that should be followed by Hibernate.
+	e) This is almost not used method in real projects.
+
+
+Q) What do you mean by Dynamic insert query in Hibernate??
+	(or)
+Q) What do you mean by Dynamic SQL query generation in hibernate??
+
+	=> For all the db tables that are mapped all the entry classes collected from the mapping
+	   files the SessionFacotry obj generated basic insert, update, delete and select SQL
+	   query having id field values as the criterial value by using Dialect comp.
+	   These SQL query are called pre-generated SQL queries... when ses.save(-), ses.update(-) and ses.delete(-)
+	   and ses.get(-,-) methods are called, these pre-generated queries will be used internally to complete persistence operations.
+
+	=> Generally these pre-generated sql queryies involves all the column value in the SQL query, even though the 
+	   relevant properties in Entity class object are having null values..i.e., though we dont set data to certain
+	   properties of entity class object still their relavent columns will participate in Pre-generated SQL queries
+	   given by Dialect..
+	
+	=> To overcome above problems and to make Dialect component to generate SQL queries dynamically only by involving those
+	   columns whose relevant properties in Entity class object are not having null values, we need to go for
+	   dynamic SQL query generation process.
+	   using dynamic-insert="true" or dynamic-update="true" attribute of <class> tag in mapping file.
+		(NOTE:: There are no dynamic-delete, dynamic-select attribute-->because it does not make sense...think why?)
+
+		In mapping files
+		================
+		<class name="com.kc.entity.Product" tabel="PRODUCT" dynamic-insert="false">
+										    (default)
+
+Q) Why there are no "dynamic-delete and dynamic-select" attribute in <class> tag to generate delete,select SQL queries dynamically?										    
+	=> Delete SQL queries deletes the complete record, not the specific column values. So only id field/property value is required
+	   from Entity object to generate delete SQL query..So dynamic delete SQL query is not required.
+	   	DELETE FROM PRODUCT WHERE PID=?
+	
+	=> The ses.get(-) and ses.load(-,-) first generate select Query selecting entire records
+	   based on the given id value and they create object for entity class to store the retrieved
+	   record into that object. So there is no possibility of dynamic select SQL query
+	   involving specific cols of ur choice..For such activities go for HQL/JPQL queries.
+	   	SELECT PID, PNAME, PRICE, QTY, STATUS FROM PRODUCT WHERE PID=?
+
+L22(18June)
+-------
+
+=> In a running Java Application to hold different types of values we take different types of variable or objects
+	-> Numeric data type(int, long, byte, short) variables to hold numeric values
+	-> floating data type(float, double) variables to floating values
+	-> character data type(char) variables to hold character values
+	-> String class objs to hold text/string values
+	-> java.lang.Class obj to hold certail class/interface/enum/annotation/data type info
+	-> java.lang.reflect.method class obj to hold certain java method details
+	-> java.lang.reflect.Constructor class obj to hold certain constructor details
+	-> java.lang.reflect.Field class obj to hold certain java class member variable details.
+
+=> Different ways of creating object of java.lang.Class
+-------------------------------------------------------
+	a) using Class.forName(-)
+	    eg:: Class clazz= Class.forName("java.util.Date");
+		-> loads the given java.util.Date class from HDD to JVM memory
+		   and returns the object of java.lang.Class having loaded
+		   class name and its metadata.
+		
+		-> Here "clazz" is not the object of java.util.Date. It is the reference variable pointing to
+		   the object of java.lang.Class contains java.util.Date and its metadata...Using this "clazz" we 
+		   can do multiple operations on the java.util.Date class.
+		Operations are::
+			- Creating object of java.util.Date class (loaded class)
+			- getting all methods info from java.util.Date class
+			- getting all constructor info from java.util.Date class
+			- getting all member variables/fields info from java.util.Date class
+			and etc...
+
+		String s = java.util.Date; //holds class name as string value i.e, we can't perform the above said operations
+		Class clazz= java.util.Date; //holds class i.e, we can perform the above said operations
+
+
+	b) using getClass() method of java.lang.Class
+	---------------------------------------------
+		Date d= new Date();
+		Class clazz = d.getClass();
+	
+			=> Same as above
+
+	c) using "class" property (.class-->built-in property)
+	----------------------------------
+		Class c= Date.class;
+		Class c1= Integer.class;
+		Class c2= System.class;
+		etc...
+
+
+=> Every java application contains two default threads
+	a) main	b)gc(garbage collection)
+=> Every java application contains two default properties
+	a) class b) length
+=> Every java application contains multiple default services
+	a)gc	b)DriverManager  c)Exception Handler and etc..
+=> Every java application contains 3 built-in streams
+	a)System.in	b) System.out	c) System.err
+
+
+
+
+
+L23(19June)
+-------
+
+Loading Object
+==============
+	=> Loading object means selecting a record from DB table by using given id value as the criteria value and 
+	   storing that record into an object of given Entity class.
+
+	=> To perform single record/object loading we can use one of the two methods
+		a) ses.get(-,-) -->always performs eager loading/early loading
+		b) ses.load(-,-) ->can perform both eager/early loading or lazy/late loading [ by default performs late loading]
+
+		-> In eager loading hitting to db s/w for selecting a record takes place immediately irrespective of whether received record/object
+		   is used or not.
+
+		-> In lazy loading ses.load(-,-) method first returns one dummy/proxy object as the return value...when we really start using 
+		   that proxy/dummy object, then hitting to DB s/w takes place to get record into Entity class object by executing SQL select query.
+
+	
+	Example code on ses.get(-,-) method
+	-----------------------------------
+	Signature of ses.get(-,-) method
+		public <T> T get(java.lang.Class<T> entityType, java.io.Serializable id)
+		      (<T>:generic return type) (<T>:generic param type)
+
+	Product prd= ses.get(Product.class,1800);
+	if(prod==null)
+		System.out.println("Record not found");
+	else
+		System.out.println("Record Found:: "+prod);
+
+	
+	
+
+L24(22June)
+-------
+
+Loading object by ses.load(-,-) method
+======================================
+	=> This method can perform both eager loading and lazy loading(default).
+	=> When this method is called, first this method returns inMemory Proxy class obj
+	   (which is sub class Entity class), when we start calling non-indentifier(other than id
+	   property methods), the hit to db s/w takes place to get the records and store the record by creating another
+	   object for Entity class(real object)
+	
+	Proxy Class:: The class that contains additional logics to apply before using
+	              real class logics. Working with Proxy class gives the feeling of
+		      working with real class..Because both contains same methods and
+		      implements or extends from same class.
+
+	
+	Normal java class
+	-----------------
+	.java(HDD) ---> .class(HDD) ---> JVM loads .class file--->execute
+	                                       (JVM memory)
+	
+	InMemory class
+	--------------
+	source code Generation(JVM Memory) ---> compilation and generation of .class(JVM Memory)
+		----> Loads of byte code (.class code---->execution(JVM Memory))
+
+	While working with Proxy DP(designed pattern), we have two types of InMemory class
+		a) Normal Proxy class created as .java --> .class by programmer
+		b) dynamic InMemory proxy class(generated by special libraries(CGLIB, JDK, JAVAASSIT and etc..) at runtime)
+
+	NOTE: W.r.t ses.load(-,-) method, the HB f/w uses javaassist libraries to generate proxy class as InMemory class.
+	NOTE: ses.load(-,-) method is designed based on Proxy DP because it internally generates InMemory proxy class.
+
+
+
+
+
+L25(23June)
+-------
+
+=> While callign ses.get(-,-), if the given id based record is not found in the db table then we will get "null" value
+=> While calling ses.load(-,-), first it returns proxy object.. when we call getter methods on tha proxy object
+   then we get ObjectNotFoundException if record is not available. That means ObjectNotFoundException is not 
+   thrown by ses.load(-,-) method, that is thrown by getter methods that are overridden in InMemory proxy class.
+	[To see this-> print something just after ses.load(-,-) and we will see it is getting printed, even if record 
+	  is not there in the db. But we get error while using ses.load(-,-) object ]
+
+Q) How to perform eager by using ses.load(-,-) method
+          -------------------------------------------
+Ans) Keep lazy="false" [default is "true"] in <class> tag of mapping file and call ses.load(-,-) method in client application in regular manner.
+
+	In mapping file(Product.hbm.xml)
+	---------------------------------
+	<class name="com.kc.entity.Product" table="PRODUCT" dynamic-insert="true" lazy="false">
+
+
+NOTE:: Generally changing mapping files info like lazy="true" or lazy="false" in the middle of 
+       the application executions is very difficult. So we use ses.get(-,-) for eager loading object/record,
+       Similarly we use ses.load(-,-) for lazy loading of object/record.
+
+
+Q) If ses.load(-,-) is taken for lazy loading(lazy="true") and if we make Entity class as the final class then what happens??
+Ans)
+	The ses.load(-,-) performs eager loading in the above setup because InMemory Proxy class will not be generated
+	as the sub class for the final Entity class.
+
+
+Q) Though Entity class is taken as final class, How can we make ses.load(-,-) method performing lazy loading ?? [refer HBProj02-ProxyInterface in gitHub]
+Ans)
+	Possible by making ses.load(-,-) method generating InMemory proxy class as the implementation class of given Proxy Interface.
+	Not as the sub class of entity class.
+	
+	STEP1: Take proxy interface having the declaration of getter, setter methods.
+	STEP2: Make Entity class as final class and also implement the above Proxy interface.
+	STEP3: specify Proxy interface name in the "proxy" attribute of <class> and also enable lazy loading
+		<class name="com.kc.entity.Product" table="PRODUCT" lazy="true" proxy="com.kc.entity.IProd">
+	STEP4: Do the needful in the client Application
+
+	
+
+Q) What is the difference b/w ses.get(-,-) and ses.load(-,-) methods?
+
+	ses.get(-,-)
+	============
+	=> Always can perform only eager loading of obj/record
+	=> Does not use Proxy DP internally.
+	=> Direct hits the Db s/w to get the record and no InMemory Proxy class is generated.
+	=> If record is not found in the db table then we get null
+	=> Suitable to check whether record is available or not.
+	=> We can take entity class as final class without getting any side effects.
+	=> No possiblity of working with proxy interface.
+		[Ignore the configuration of Proxy interface]
+	=> Creates only one object toward loading the record/object.
+	   that is object for entity class(real object)
+	=> Prefered in stand along application where the loaded record
+	   will be used in the same layer immediately.
+	
+	=>usecase:: 
+		Loading FB posts(eager loading)
+
+
+
+	ses.load(-,-)
+	============
+	=> Can perform both eager and lazy loading[default is lazy loading]
+	=> uses the Proxy DP
+	=> If lazy loading is enabled, this method first returns Proxy object created
+	   for the Dynamic InMemory Proxy class.. when we call non-identifier methods
+	   on this proxy object then real hit to DB s/w take place.
+	   If eager loading is enabled(lazy="false") then ses.load(-,-) directly hit the Db s/w.
+	=> if record is not found here then we get ObjectNotFoundException.
+	=> Not suitable to check whether record is available or not.
+	=> if we take entity class as final class, ses.load(-,-) performs only eager loading.
+	=> We can configure proxy interface to perform lazy loading though entity class is taken as final class.
+	=> Creates two object when lazy loading is enabled(1 proxy obj , 1 real obj)
+	   but it creates only 1 object(real obj) when eager loading is enabled.
+	=> Prefered in layered applications like MVC web applications..where
+	   DAO attempts to load the obj/record and sends view component through 
+	   Controller...At DAO class proxy obj is created and sent to the view layer 
+	   through controller...So when the proxy object is actually used in the view
+	   layer the lazy or real interaction with Db s/w take place.
+	
+	=>usecase:
+		Loading previous comments of FB post
+
+
+
+L26(24June)
+-------
+
+=> The java class that contains full of static methods having ability to create and return 
+   certain object is called Utility class.
+
+=> Instead of placing the logic to create Configuration class obj, SessionFactory obj, Session obj
+   and logic to close same objs in Client Application directly... It is recommended to place those
+   logics in seperate Hibernate Util.java file(Utility Classes)
+
+=> Generally we need One configuration, SessionFactory, objects in teh project on 1 per Db s/w basis...
+   So we prefer creating them in the static block of HibernateUtil class.
+
+
+Try with Resource
+=================
+	=> If the stream objs, socket objs, jdbc objs, hibernate objects and etc.. are AutoClosable
+	   object. So when we open/create them using try with resource.. they will be closed
+	   at the end of try block automatically...
+	=> This feature is introducted to Java from java7 but enhanced and continued in java using java8
+
+	=> All JDBC objects are auto closable because they are implementing java.lang.AutoClosable(I)
+	=> HB's Session, SessionFactory object are Autoclosable objects.
+
+	try(BufferedReader reader = new BufferedReader(new FileInputStremmReader(System.in)){
+		...
+		...
+	}
+	--> "br" ->BufferedReader will be closed automatically at the end of the App or witer papers.
+
+	=> Hibernates Session,SessionFactory, tandem boxes and etc.. are called java domain objects
+	   supporting autoboxing feature.
+
+Hibernate Client application with try with resource(Note:: HibernateUtil is class design by me->plz find in Project at git)
+---------------------------------------------------
+	public class LoadingObjTestTWR2 {
+		public static void main(String[] args) {
+			try (SessionFactory factory=HibernateUtil.getFactory();
+					Session ses=HibernateUtil.getSession();) {
+				
+				Product prod1= ses.get(Product.class, 1803);
+				if(prod1 !=null)
+					System.out.println("Record found:: "+prod1);
+				else
+					System.out.println("Record not found....");
+			}
+			catch(HibernateException he) {
+				he.printStackTrace();
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
+
+		}
+	}
+
+
+NOTE:: Upto Java8, the variables used in try with resource can't be declared before try with resource.
+	But hat problem is not there from java9 onwards.
+
+
+
+L27(26June)
+-------
+
+Updating object
+===============
+	=> Updating the record represented by the given object of Entity class by taking
+	   the id value as the criteria value.
+	=> There are 3 approaches to update the object
+
+	Approach 1: Using ses.update(-) method directly
+        ===============================================
+
+		=>signature:: public void update(Object obj)
+		   
+		   This process by default use pre-generated update query that update all column values
+		   by taking id value as the criteria value.
+		
+		=> UseCase:: Launching update/modify/edit form directly without old values of record
+		   to update the complete record with new value collected from the user based on the given id value.
+		
+		=> Use this approach only when you want to update the entire
+		   object/record by taking id value of the given object as the criteria value.
+		
+		=> Since it is non-select operation, we must execute in transactional env..
+		
+		=> ses.update(-) gives only persistence instruction to HB f/w.. The actual update
+		   obj/record operation takes when tx.commit() is called.
+		
+		=> Let's compare this with real life scanerio, if we have a table and records are there(let's say report generation table)
+		   now we have option to edit and delete, once we click on edit buttion new form will open with all fields blank and we have
+		   to fill the fresh form and click on update button [ so not good in report generation application as compare to approach2]
+	
+	
+	Approach 2: Load and update the object using ses.get(-,-) and ses.update(-) 
+	===========================================================================
+		=> This approach is good to update the record partially
+		=> while using this approach, we need not to set old values to the entity object
+		   which we don't want to modify bacause they will be collected from the Loaded object directly.
+		
+		=> In this approach, if record is not there to update then we will not get exception.
+		   Rather we can give proper non-technical guiding message to end user.
+
+		=> Usecase:: Useful in report generation related edit operation.
+		   Here we have a table with lots of record and edit, delete button. Now when we will click on 
+		   edit button we will get new form where all the records will be there, now we can modify the only
+		   required records and rest can be left unchanged. And we can click on update button.[visualized else refere 1:16:00 lec]
+
+
+
+Q) Can we update a record without calling ses.update(-) method?
+Ans) Yes, after loading the record into Object and if we modify the object within
+     the Tx.. then the modifications will be reflected in DB table record as Synchronization
+     when is tx.commit() or ses.flush() is called.
+     For example code refer Approach 3
+
+
+
+	
+	Approach 3: Load and update object in Transactional Environment...without calling ses.update(-) method.
+	=======================================================================================================
+		
+		=> All points like usecase and etc are same as Approach 2
+		=> It shows synchronization b/w Object to Db table row i.e, the modification done on Entity object
+		   will be reflected to Db table row at the end of Tx when the Tx is committed.
+
+
+NOTE:: For Approach 2 and Approach 3 it is recommended to use dynamic-update="true" in hbm file's <class>.
+       So that only those column will be participated whose data are modified.
+		  
+
+
+
+L28(28June)
+-------
+
+Procedure to develop Hiberante application using maven(built-in plugin in eclipse)
+======================================================
+	step1: create maven project by taking "maven-archetype-quickstart" as the Project archetype.
+											   (Template to create projects with different direcory structures)
+		Popular archetypes in maven are
+			-> maven-archetype-quickstart ( for standalone application)
+			-> maven-archetype-webapp ( for web application)
+	
+		File menu -->maven Project --->next --->search and select maven-archetype-quickstart--->
+		groud id: kc
+		artifact id: HBProj05-DeleteObject
+
+	step2: Change java version to latest[our choice] version of java(in pom.xml file) and perform maven update
+	step3: add dependencies(jar files) to the pom.xml
+	step4: go to https://mvnrepository.com/ and collete dependency file link and paste in pom.xml file under dependencies section.
+	step5: copy ojdbc8 also(from above website)
+
+	In maven, the project, jar file and plugin are identified with 3 details
+		-> group id (company name)
+		-> artifact id( project name/ jar file name/ plugin name)
+		-> version (project version/ jar file version/ plugin version)
+	
+	step6: Observe maven project directory structures to add our resources
+		src/main/java :: to keep packages and source files of application development
+		src/test/java :: to place unit testing code (like junit/mockito code)
+
+	
+	step7: Add resources(files) to the project as per our application development and run the application.
+
+
+
+
+Deleting Object
+===============
+	=> It is not deleting the java object.. It is deleting the record represented by the object based on the
+	   id value of the given entity object as the criteria value.
+
+	public void delete(Object obj)
+
+	=> There are two approaches to delete the object
+		a) Delete object directly ( use ses.delete(-) method directly)
+		b) Load and delete object (use ses.get(-,-) and ses.delete(-) methods)
+
+
+	a) Delete object directly ( use ses.delete(-) method directly)
+	==============================================================
+		=> In this approach we can not check whether record is available or not
+		   before deletion.
+		=> Not recommended to use because it attempts to delete record though
+		   record is not available.
+		=> Prefer using approach 2.
+		=> ses.delete(-) method generates one select query to search record is available or not
+		   if available then only it generates delete sql query. If record is not available then
+		   no Delete query will be generated.
+				   
+		=> NOTE:: Since ses.delete(-) return type is void, so we can't know whether record is 
+		   deleted or not. It is bad practice to delete record in this manner.
+
+	
+	b) Approach 2: Load object first then Delete object(use ses.get(-,-) and ses.delete(-))
+	========================================================================================
+		=> Here we can check whether record is available or not before deletion. If not available
+		   we don't attempt record deletion.
+		=> very useful approach for record/object deletion
+
+		NOTE:: Even only ses.delete(-) generates select query internally, so don't think here we are unnecessary 
+		       performing select then delete query.
+
+
+
+=> We can not check whether object/record is deleted/updated or not while working with ses.update(-) and
+   ses.delete(-) method because their return type is void... So we perform loading record/object first to check
+   the availability of record... then we perform update/delete record/object operation if the record/object is available.
+
+=> ses.update(-)/ses.delete(-), ses.save(-), ses.persist(-) methods give persistence instructions to HB f/w when they are invoked...
+   These persistence instruction will be fullfilled actually when tx.commit() or ses.flush() methods are called directly or indirectly
+
+=> All single row update object,delete object, load object operations take place only based on id value
+   as the criteria value...if we want to perform some operation by taking other than id value as the criteria
+   value then go for HQL/JPQL and etc.. queries..
+
+=> For most of the CRUD operations tx.commit() uses the pre-generated Query given SessionFactory as part of 
+   Bootstrapping process if Dynamic Query generation process is not enabled.
+
+=> If dynamic query generation process is enabled.. based on the received persistence instruction, tx.commit() generates
+    that new/dynamic SQL query.
+
+
+
+
+
+
+L29(29June)
+-------
+
+ses.saveOrUpdate(-)
+===================
+	=> Performs save object operation, if the record is not already available in DB table
+	   otherwise performs update object operation by taking id value as the criteria value.
+
+	public void saveOrUpdate(Object obj)
+
+	We can use ses.saveOrUpdate(-) in two ways
+	------------------------------------------
+		a) directly calling ses.saveOrUpdate(-)
+		b) calling ses.saveUpdate(-) having unsaved-value and generator cfg
+
+	Approach 1: directly calling ses.saveOrUpdate(-)
+	================================================
+		usecase1: creating new membership if not there or adding more 
+		          rewards point if membership is already there.
+		usecase2: Opening bank account if not there or adding more funds to bank
+		          if bank account is already open.
+		
+		=> In this approach 3 possible variants of queries will be generated.
+			1) select query + insert query [ if record is not available]
+			2) select query + update query [ if record is available and all data is not matching with the record]
+			3) select query [if record is available and data is matching with object data->simply no change in data]
+
+
+	Approach 2: Calling ses.saveOrUpdate(-) having unsaved-value and generator cfg
+	==============================================================================
+		It generates 2 types of SQL queries [Here not select SQL query will be generated in any condition]
+		
+		a) Direct INSERT SQL query to insert the record if "unsaved-value" in <id> tag and id property
+		   value is the Entity obj is matching [ If any generator like "increment" is cfg then the inserted record will have the generator supplied
+		    id value as pk col value otherwise the id property value will be taken as id value cum pk column value]
+		
+		b) Direct Update SQL query to update the record if "unsaved-value" in the <id> tag and id property value in the
+		   given Entity object are not matching.. For this update oeration the id property value of the entity object will
+		   be taken as criteria value.
+
+NOTE:: "unsaved-value" concept is given to make ses.saveOrUpdate(-) method for not generating SELECT SQL query
+       to check record is available or not and to make ses.saveOrUpdate(-) method to perform INSERT or UPDATE operation
+       directly by generating INSERT or UPDATE sql query directly without any SELECT SQL query generation.
+
+
+
+L 30(1 july)
+-------
+
+Q) How can we perform Synchronization b/w Objects to DB table rows using Hibernate??
+	
+	=> If we modify the loaded object in a transaction, then modification done in Object will reflect
+	   to the Db table row automatically when the Transaction is committed.
+
+	=> If we call ses.refresh(-) having the loaded obj..then the modifications done in DB table row
+	   will reflect to the object automatically.
+	   [To do this, first get the object and print it, after that make thread.sleep(someTime) and then
+	    call sys.refresh(ObjectName) then print the object...while it is in sleep mode go to the db and 
+	    modify the data...once it will come out from sleep mode...it will print the new modified record.]
+	    Demo code part::
+	    ----------------
+		//load the object
+		Product prod1= ses.get(Product.class, 1800);
+		System.out.println("Object Data:: "+prod1);
+		System.out.println("==================================================================");
+		System.out.println("Modify 1800 record from the DB table during the sleep time...");
+			
+		Thread.sleep(40000);
+		ses.refresh(prod1);
+		System.out.println("Object Data:: "+prod1);
+
+	=> Signature of ses.refresh(-) :: public void refresh(Object obj)	
+
+
+
+ses.merge(-)
+============
+	=>Signature:: public Object merge(Object ojb)
+
+	=> This method is given basically to perform merger operation i.e., it merges given object data
+	   with already available obj in Session having same id value
+	=> This method can also be used as alternate to ses.saveOrUpdate(-) for inserting or updating object..
+
+	Two approaches using ses.merge(-)
+	=================================
+		Approach 1: Alternate to ses.saveOrUpdate(-) method
+		Approach 2: To merge the object [mostly used for this only]
+
+	Approach 1: Alternate to ses.saveOrUpdate(-) method
+	---------------------------------------------------
+		
+		=> If unsaved value and generator is not configure then ses.merge(-) method
+		   uses select query + insert query or select query + update query to perform 
+		   save object or update object operation.
+		=> If unsaved-value and generator are configure then ses.merge(-) uses direct insert SQL
+		   query or Select query + update query to perform save object or update object operation.
+			=> If the unsaved value is matching with the id value of Entity obj then it performs save obj
+			   operation by generating SQL Insert query.
+			=> If the unsaved value is not matching with the id value of Entity obj then it performs update
+			   obj operation by generating SQL select query + sql update query.
+
+		=> The key differences b/w ses.merge(-) approach1 and ses.saveOrUpdate(-) are
+			a) ses.merge(-) support dynamic insert, dynamic update queries generation where ses.saveOrUpdate(-) does not support.
+			b) ses.merge(-) returns new Object of Entity class representing the record to be inserted or updated where as 
+			   ses.saveOrUpdate(-) does not return any value because its return type is void.
+
+
+
+
+	Approach 2: To merge the object
+	===============================
+
+		Limitation of ses.update(-) towards merging data
+		------------------------------------------------
+			Sample Code:::
+			--------------
+				tx=ses.beginTransaction();
+				//Load object
+				Product prod1=ses.get(Product.class, 1800);
+				if(prod1 ==null)
+					System.out.println("Record not found");
+				else 
+					System.out.println("Object Found:: "+prod1);
+				
+				Product prod2= new Product();
+				prod2.setPid(1800);
+				prod2.setPrice(121212.21);
+				prod2.setStatus("Not available");
+				prod2.setQty(12.0);
+				ses.update(prod2);
+				tx.commit();
+			
+			=> In any cache of Hiberante we can't place duplicate objects. i.e, we can not
+			   place two objects of same entity class having same id value can not be placed
+			   In caches of hiberante...if we try to place we get NonUniqueObjectException.
+			In above code already prod1 is there in the connection pool with pid 1800, and we are calling ses.update(-)
+			with same pid, now before commit update method puts data in conn pool but already we have data with pid 1800
+			So it will throw NonUniqueObjectException.
+
+		
+		Solution of Limitation::
+			Instead of update method use merge method
+			
+			Sample code part:::
+			-------------------
+				//begin tx
+				tx=ses.beginTransaction();
+				//Load object
+				Product prod1=ses.get(Product.class, 1800);
+				if(prod1 ==null)
+					System.out.println("Record not found");
+				else 
+					System.out.println("Object Found:: "+prod1);
+				
+				Product prod2= new Product();
+				prod2.setPid(1800);
+				prod2.setPrice(121212.21);
+				prod2.setStatus("Not available");
+				prod2.setQty(12.0);
+				ses.merge(prod2);
+				tx.commit();
+				System.out.println("Record is updated.");
+			
+
+
+
+
+L 31(2 july)
+-------
+
+ses.merge(-) method usecase
+===========================
+	=> A,B are the joined account holder.. A has performed checkBalance operation and got
+	   account info object having balance of 30k, simultaneously "B" has performed deposit
+	   operation having another account info object with same account number... new Amount of
+	   deposit should merge with already available AccountInfo object's information.
+
+
+Q) What is the difference between ses.update(-) and ses.merge(-) method???
+
+	ses.update(-)
+	-------------
+	=> Performes only update object operation.
+	=> Direct generates update SQL query.
+	=*> This method throws "NonUniqueObjectException" having given object id value...
+	   If L1 cache is having another object of same entity class with same id value.
+	=> Returns nothing, becaue return type is void.
+
+
+	ses.merge(-)
+	------------
+	=> Can perform save object or update object operation(version 1)
+	   Can perform merge operation to merge given object data with already
+	   available data of existing object in Level1 cache.
+	=> Generates select + insert/update SQL query (version1-save or update)
+	   Generates directly update query to perform merge operation(version2)
+	=*> In this situation, it merges given object data with already available
+	   object of L1 cache.
+	=> Returns L1 cahce object with merged data collected from given object.
+
+
+
+Dialect::
+=========
+	=> It is the component/services internally used by Hiberante to genearte
+	   the SQL queries either as pre-generated Queryies or as dynamic SQL queries.
+
+	=> Dialect component class object is created while building SessionFactory object
+	   and it will be associated with each Session object.
+
+	=> The dialect associated with Session object uses pre generated SQL queries when
+	   dynamic query generation is not enable..
+	   But same dialect component generates update, insert SQL queries dynamically when
+	   Dynamic insert, dynamic update is enabled.
+
+	=> Dialect component helps Hibernate Application in two ways..
+		a) To generate optimized SQL queries based on the underlying Db s/w.
+		b) To assign intelligent default values for the properties that are not
+		   specified in Hibernate configuration file.
+
+	=> All dialect components are classes supplied by Hibernate extending from org.hibernate.dialect.Dialect(c).
+	   These class names will change based on Db s/w and its version.
+
+	=> Based on the JDBC properties we configure.. The hibernate f/w automatically picks up the dialect component.
+	   So it is optional to configure..But it is recommended to configure specially if one machine is having multiple
+	   version of same DB s/w.
+
+
+Configuring hibernate dialect/sql Dialect
+-----------------------------------------
+	<property name="hibernate.dialect"> org.hibernate.dialect.Oracle10gDialect </property>
+
+
+
+
+
+
+L 32(3 july)
+-------
+
+Dynamic Schema Generation
+=========================
+	=> Hibernate is capable of generating Db tables, sequences and etc.. based on the Entity classes
+	   and other cfgs we do in hibernate Application. i.e, we need not to create db tables, sequences
+	   and others related to DB s/w manually.
+	=> For enabling dynamic schema generation we need to use "hbm2ddl.auto" property of hibernate cfg files.
+	
+	The possible value for "hbm2ddl" property are create,update,validate,create-drop [default is validate, best is update]
+	
+	<property name="hbm2ddl.auto">create </property>
+	------------------------------------------------
+		=> Always create the new db table based on mappling files/mapping annotation info
+		=> If db tables are already available...then it will drops them
+		=> Will be used in long run projects..like railway ticket reservation... Once project is restarted we will loose
+		   entire data because the existing db table will be destroyed and the new db tables will be created.
+		
+		STEPS to use::
+		--------------
+		a) add property in hibernate cfg file
+			<property name="hbm2ddl.auto">create</property>
+		
+		b) prepare mapping file as show below[Product.hbm.xml]
+			<hibernate-mapping>
+			<class name="com.kc.entity.Product" table="PRODUCT" dynamic-insert="true" dynamic-update="true">
+			<id name="pid" column="pid" unsaved-value="1800" >
+			<generator class="increment"></generator>
+			</id>
+			<property name="pname" column="pname" length="20" not-null="true"/>
+			<property name="price" column="price"/>
+			<property name="qty" column="qty"/>
+			<property name="status" column="status" length="10"/>
+			</class>
+			</hibernate-mapping>
+		
+		NOTE:: While using dynamic schema feature, we can control only the length of String type column that are mapped with
+		       string properties from mapping file..i.e, we can't contro the lengths of numeric cols that are mapped with numeric properties.
+		
+		USECAESE:: Long run projects... while will be down/restarted once in a while and ready to vanish data whenever they are down.
+			eg:: railway tickets info, zoom recordings, Bill Transaction in Hotel and etc....[recall more]
+
+
+	<property name="hbm2ddl.auto">update </property>
+	------------------------------------------------
+		=> Creates the new DB tables, if not there
+		=> Alters the db tables (only adding new cols is possible) if it is not matching with entity classes
+		=> Uses the db table if they are matching with entity classes..
+		*=>The best value to utilize in the production env..of the Project
+
+
+
+	<property name="hbm2ddl.auto">validate </property>
+	--------------------------------------------------
+		=> Just validates whether DB table are there according to mapping file/annotations
+		   configuration or not. If there uses the table, if not there then throws the exception.
+		=> This option does nothing...everything like db table creation we need to do manually.
+		=> This is default value if no value is specified.
+		
+		USECASE:: Mostly useful in "testing" environemt of the Project.
+	
+
+
+	<property name="hbm2ddl.auto">create-drop </property>
+	-----------------------------------------------------
+		=> Creates the DB tables on the creation of SessionFactory objects
+		   and drops the db tables on the closing the SessionFactory obj automatically.
+		=> Very useful in "UAT" environment, while giving demo of Project
+			UAT :: User Acceptance Test
+		=> It attempts to drops the db tables at the beginning of the Application and also creates 
+		   the db tables.
+		
+
+Q) What is Dirty Object or stale state object in Hibernate ??
+	=> The object that is having pending changes i.e., the changes in object data
+	   that are not synchronized with db table record is called Dirty object or stale state object.
+	=> After ses.save(-) and before ses.commit(-), data is there in L1 cache and it is not synchronized
+	   with db s/w...so it is Dirty object
+	 To check::
+	 ----------
+	 System.out.println("Is session dirty::"+ ses.isDirty());
+
+
+
+
+
+
+L 33(5 july)
+-------
+
+To interact with multiple DB s/w using hibernate, we need to create multiple configuration
+class objects, SessionFactory objects and session objects.
+
+Write a Application that transfers a record of oracle db table(Product) to mysql DB table(product) [Proj 10 git]
+--------------------------------------------------------------------------------------------------
+	Step1: Make sure that Product db table having recrods is available in Oracle DB s/w
+	Step2: Take following resources in the Project
+		-> hibernate-ora.cfg.xml
+		-> hibernate-mysql.cfg.xml
+		-> Product.java
+		-> Product.hbm.xml
+		-> HibernateUtil-Oracle.java
+		-> HibernateUtil-MySql.java
+		-> DataTransferTest.java
+
+	Step3: The resource code part is:::
+	-----------------------------------
+		//get SessionFactory obj,ses obj for oracle
+		SessionFactory oraFactory = HibernateUtil_Oracle.getSessionFactory();
+		Session oraSes=HibernateUtil_Oracle.getSession();
+		//get SessionFactory obj,ses obj for mysql
+		SessionFactory mysqlFactory = HibernateUtil_MySql.getSessionFactory();
+		Session mysqlSes=HibernateUtil_MySql.getSession();
+		Transaction tx=null;
+		try(oraFactory;oraSes;mysqlFactory;mysqlSes){
+			//load obj from oracle
+			Product prod1= oraSes.get(Product.class, 4);
+			if(prod1!=null) {
+				//begin tx
+				tx=mysqlSes.beginTransaction();
+				mysqlSes.save(prod1);
+				tx.commit();
+				System.out.println("Record Transfered successfully...");
+			}
+			else
+				System.out.println("Record not availabe to transfer...");
+		}
+
+	
+
+Q) Can we place only Parameterized constructor in Entity class of Hibernate Application??
+	
+	=> Since ses.get(-) and ses.load(-) looks to create object for given Entity class using 0-param constructor and we 
+	   don't get 0-param constructor as default constructor, if parameterized constructors are placed.. So load object operation fails.
+
+
+
+BootStrapping in Hibernate
+==========================
+	=> It is all about keeping SessionFactory, Configuration, Session object ready in our HB Applications
+	=> It can be done in 2 ways
+		a) Legacy BootStrapping [old style still works in new versions]
+		b) Modern BootStrapping [Introduced from HB 4.x taking the support Service Registries]
+	  
+	  NOTE:: In Legacy Bootstrapping we can't add custom services or components to SessionFactory.
+	         Where as in Modern Bootstrapping adding custom services/components is quite possible.
+
+	
+	Legacy BootStrapping
+	====================
+		=> Here we can pass Hibernate cfg inputs to create SessionFactory object in 3 approaches
+			a) Using hibernate.properties or any other properties files
+			b) Using hibernate.cfg.xml file or any other xml file [best]
+			c) Using Programatic approach
+
+	Q) Can we develop hibernate application without having xml file as hibernate cfg file ?
+		=> Possible using properties files or programatic approach (a and c approach from above)
+
+	Q) Can we develop hibernate application by taking hibernate cfgs through Annotation ?
+			(or)
+	Q) Can we pass hibernate cfg inputs to SessionFactory object creation using Annotation?
+		
+		=> Not possible... Because as of now no annotation are provided to place 
+		   hibernate cfg properties.
+
+	Q) Can we develop hibernate application without having xml files as the hibernate mapping files ?
+		=> Possible by using mapping annotation placed in Entity classes.
+
+
+To work with hibernate.properties as alternate for hibernate.cfg.xml[proj 11 git]
+====================================================================
+	Step1: Take a copy to existing project
+	Step2: delete hibernate.cfg.xml file
+	Step3: add hibernate.property in "src" folder.
+			[fixed file name collected the folders added to classpath]
+		
+		NOTE:: "src" folder of eclipse project, src/main/java folder of eclipse maven/gradle project are there in the classpath by default.
+
+	Step4: Write following code in the static block of HibernateUtil.java to create SessionFactory obj
+	---------------------------------------------------------------------------------------------------
+		// Configuration object
+		Configuration cfg = new Configuration();
+		cfg.configure(); //Even if we don't call now not a issue.
+		cfg.addFile("src/com/kc/entity/Product.hbm.xml");
+
+
+	Limitation of Legacy bootstrapping using hibernate.properties
+	-------------------------------------------------------------
+		=> Properties file is not industry standard because there are
+		   no DTD or XSD like rules to check the content of properties file
+		=> The word hibernate is not optional for hibernate properties like hibernate.show_sql
+		=> We must specify the name of mapping files explicitly in bootstrapping java code.
+
+
+
+		 
+L 34(7 july)
+-------
+
+	c) Using Programatic Approach of Legacy Bootstrapping
+	-----------------------------------------------------
+		=> we need to write java code using cfg.setProperty(-,-) to supply hibernate cfg properties for Bootstrapping
+		
+		Delete hibernate.cfg.xml file and other properties files.
+		Example code[HibernateUtil.java->static block]
+		--------------------------------
+			Configuration cfg = new Configuration();
+			cfg.configure(); //Even if we don't call now not a issue.
+			cfg.setProperty("hibernate.connection.driver_class", "oracle.jdbc.driver.OracleDriver");
+			cfg.setProperty("hibernate.connection.url", "jdbc:oracle:thin:@localhost:1521:orcl");
+			cfg.setProperty("hibernate.connection.username", "system");
+			cfg.setProperty("hibernate.connection.password", "Arunkc9900");
+			cfg.setProperty("hibernate.show_sql", "true");
+			cfg.setProperty("hibernate.format_sql", "true");
+			cfg.setProperty("hibernate.dialect", "org.hibernate.dialect.Oracle12cDialect");
+				
+			cfg.addFile("src/main/java/com/kc/entity/Product.hbm.xml");
+				
+			// build SessionFactory
+			factory = cfg.buildSessionFactory();
+
+		
+		Limitations of Programatic Approach
+		-----------------------------------
+			=> No flexibility of modification because of java code is used to supply configuration properties.
+			=> In properties the word "hibernate" can not be taken as optional
+			=> Not Industry standard
+			=> We must supply hibernate mapping file name seperately.
+
+
+
+b) Modern BootStrapping
+=======================
+
+Marker interface/Tag interface
+------------------------------
+	=> The interface that makes underlying JVM/Server/Framework/Container to provide
+	   special runtime capabilities to the implementation class object is called marker interface/tag interface.
+	=> The underlying JVM/Server/Framework/Container does not provide special runtime capabilities
+	   because of methods declarations that are in marker interface..they will provide special run time capabilities
+	   based on the marker interface that is being implemented.
+	=> Most of the times marker interfaces are empty interfaces.
+		eg:: java.io.Serializable(i)
+		     java.lang.Cloneable(i)
+		     org.hibernate.service.Service(i)
+		     java.rmi.Remote(i)
+
+
+
+		 
+L 35(8 july)
+-------
+	
+	=> All services in hibernate that are bound with SessionFactory are the classes implementing
+	   org.hibernate.service.Service(i) marker interface.
+	=> Service(i) is having multiple sub interfaces and implementing these sub interfaces we have
+	   multiple impl classes and these classes represents various services... all these services 
+	   will be bound with SessionFactory object based on the cfgs we do in HB cfg files.
+	
+	Some of the Services(I) subInterface are
+		-> ConnectionProvider(I)
+		-> BatchBuilder(I)
+		-> CacheImplementor(I)
+		-> ClassLoader(I)
+		etc....
+
+	=> These sub interface represent different categories of services in hibernate
+	=> We can develop custom service to added in SessionFactory by implementing these sub interfaces.
+
+	=> ServiceRegistry is a registry where services can be registered.. All service registries are implementation
+	   classes of ServiceRegistry(I).
+	Some of the important interface under ServiceRegistry(I) are::
+		-> BootStrapServiceRegistry(I)
+		-> StandardServiceRegistry(I)
+		-> SessionFactoryServiceRegistry(I)
+	
+	=> Different servies of hibernate will be registered with different registries and they can be used
+	   in the creation of SessionFactory object... So that all the services registered with service registry
+	   will be bound with SessionFactory object...
+	=> Service registries are hierarchal i.e., if certain service is not available in one service registry then it will be
+	   verified in another service registry.
+
+	=> The process of keeping servie with service registry is called Service binding
+	=> the 3 service registries of hibernate are having built-in service registries binding
+	   and also allows custom servies binding.
+
+	BootStrapServiceRegistry is having following services binding
+		=> ClassLoaderService, IntegratorService, StrategySelector and etc..
+	
+	StandardServiceRegistry is having following services binding
+		=> ConnectionProvider/MultiTenantConnectionProvider, JdbcServices, TransactionFactory, JtaPlatform and etc...
+
+	SessionFactoryServiceRegistry is having following services binding
+		=> StatisticImplementator and etc...
+
+	=> To create ServiceRegistries we take the support of ServiceRegistry builder. We have multiple
+	   ServiceRegistry builder.
+	BootStrapServiceRegistryBuilder to build BootstrapServiceRegistry
+	StandarServiceRegistryBuilder to build StandardServiceRegistry
+	SessionFactoryServiceRegistryBuilder to build SessionFactoryServiceRegistry
+
+	=> In Legacy style, we use cfg.buildSessionFactory() method to create SessionFactory obj
+	=> In modern style, we use cfg.buildSessionFactoryr(registry) method to create SessionFactory obj
+
+
+Hibernate BootStrapping code in modern style[Proj 13]
+Adding service in BootStrapping[proj 14]
+
+
+
+
+L 36(9 july)
+-------
+
+Annotations driven HB Programming
+=================================
+	=> we can do o-r mapping cfgs in hibernate using two approaches
+		Approach 1: Using xml files [<filename>.hbm.xml]
+		Approach 2: Using mapping annotations placed in Entity classes..
+
+	=> While placing annotations in Entity classes for o-r mapping cfgs please choose
+	   the annotations in the following order
+		a) JPA Annotations (common for ORM f/ws)
+			(eg: @Entity, @Table, @Id ....)
+
+		b) JSE/JEE Config annotations ( mostly common for all ORM f/ws)
+			(eg: @PostConstruct, @PreDestroy,...)
+		
+		c) HB specific annotations ( To use hibernates' direct features)
+			(eg: @Filter, @Filters, @FilterDef, @FilterDefs,...)
+
+	=> Every Entity class having mapping annotations must be cfg in HB cfg file using <mapping class="..."/>
+		eg: <mapping class="com.kc.entity.Product"/>
+	
+	Example Entity class [ proj 15]
+	--------------------
+	DB table in oracle DB s/w
+		Artist
+		    -> aid(n)(pk)
+		    -> name(vc2)
+		    -> address(vc2)
+		    -> mobileNo(n)
+		    -> category (vc2)
+
+	Entity class with o-r mapping cfgs
+		@Data //if we write this, no need of getter and setter methods in this Entity classes
+		@Entity
+		@Table(name='ARTIST')
+		public class Artis implements Serializable {
+			@Id
+			@Column(name='AID')
+			private integer aid;
+			@Column(name='NAME', length=15)
+			private String name;
+			@Column(name='ADDRS', length=20)
+			private String addrs;
+			@Column(name='MOBILENO')
+			private Long mobileNo;
+			@Column(name='CATEGORY', lenght=15)
+			private String category;
+
+			//Setters && gettters
+		}
+
+	=> We can apply mapping annotations either on fields or on getter methods
+	=> If we are not using Lombok API then prefer applying on getter methods 
+	   otherwise prefer applying on fields
+
+	@Entity --> to make java class as Entity class[mandatory annotation]
+	@Table --> to map Entity class with db table[optional]
+	@Id --> to configure Entity class property as the singular Id field [mandatory]
+	@Column --> to map Entity class property with db table column [optional]
+	
+	NOTE:: -> If table name is matching with entity class name or if we want to match in 
+	          dynamic schema generation then writing @Table is optional
+	       -> If db table columns name are matching with Entity class properties names
+	          or we want to match them in dynamic schema generation then @Column is optional
+	       -> In @Column we can control length in dynamic schema generation only for String
+	          type properties.
+		
+	NOTE:: => No mapping file is required
+	       => If we provide both mapping annotation in Entity class and mapping file
+	          having two different details then the mapping file settings will override
+	          annotation settings.
+	       => The settings done in mapping annotations can be overridden through mapping file(xml file)
+
+
+
+
+L 37(10 july)
+-------
+
+	=> By defaults the methods of single row operations like ses.save(-), ses.persist(-), ses.update(-), ses.delete(-), ses.load(-,-)/ses.get(-,-)
+	   uses pre-generated sql query.. but we can make ses.save(-), ses.persist(-) and ses.update(-) methods using dynamic insert, dynamic update
+	   SQL queries based on the non-null property values of the given Entity objects.
+
+	=> In mapping file(xml) we use dynamic-insert="true", dynamic-update="true" of <class>
+	   to do these operations.
+	=> In annotation env.. @DynamicInsert(value = true) for dynamic insert, dynamic update sql queries generations.
+
+
+@Transient
+---------
+	=> It makes the current property on which it is applied not participating in any kind of
+	   Persistence operations like CURD operations and "hbm2ddl.auto" property related DDL operations.
+	=> If we take additional properties in Entity classes or model classes other than cols of Db table.
+	   then mark those property with @Transient
+	
+	NOTE:: When @Transient is applied, the HB f/w generates all its DDL(create table), CURD operation related
+	       queries as dynamic SQL queries even though @DynamicInsert, @DynamicUpdate annotations are not added.
+
+
+
+
+L 38(12 july)
+-------
+
+Object Versioning
+=================
+	=> This feature of hibernate is useful to keep track of how many times the object
+	   or record is modified through Hibernate persistence logic.
+	   It will maintain one numerical counter to keeping track of that changes.
+
+	=> To mark the property of entity class as the versioning property use <version> tag or @Version
+	   and this property type must be numeric type.
+
+	=> Usecases::
+		Keeping track of how many times ATM machine service is used.
+		Keeping track of how many times address or phone number is changed in the bank.
+		Keeping track of how many times caller tune is changed.[let 1st 2 is free then on wards charges]
+		Also useful towards of locking of the object to prevent simultaneously modification.
+
+	=> Bringing this effect without hiberante is possible using JDBC...but we need to use complex Triggers support.
+
+
+
+
+L 39(13 july)
+-------
+
+Object time stamping
+====================
+	=> It keeps track of when the object/record is lastly accessed modified.
+	=> Versioning keeps track of how many times the object/record is modified where as
+	   timestamping feature keeps track of the date and time of object/record's last updation.
+
+	=> For this we need to take a property in entity class of java.sql.Timestamp and we need to
+	   cfg that property using <timestamp> or @UpdateTimestamp annotation
+
+	=> In xml driven cfgs we can't apply object versioning and object time stamping features together...
+	   but the same is possible in annotation driven cfgs.
+	REASON::
+		According to mapping file rules we can place either <version> or <timestamp> tag under <class>..
+		but not both together.
+
+	=> The property in entity class of type Timestamp initially holds object/record insertion date and time
+	   later it will be replaced with the object last updation date and time.
+	
+	USECASES::
+		-> Keeping track of when the customer has visited e-commerce site last time
+		-> when the share value of stock market is lastly updated.
+		-> when the customer has used atm machine last time.
+		-> when the bank account of the customer is operated for the last time
+		 and many more....
+
+	NOTE::
+		@CreationTimestamp
+		private Timestamp dateOfJoining;
+	    -> Above annotation will create timestamp of when the record is first created, and wont change if we perform
+	       any modification on the records.
+
+
+
+L 40(14 july)
+-------
+
+Connection pooling in hibernate
+===============================
+	Two types of jdbc connection objs
+		a) Direct JDBC Connection :: created by the programmer manually
+			Class.forName("...");
+			Connection con = DriverManager.getConnection(-,-,-);
+		
+		b) Pooled JDBC Connection :: Gathered from the JDBC connection pool through DataSource obj
+			Connection con = ds.getConnection();
+		DataSource obj represents JDBC connection pool and acts as entry points for the JDBC
+		connection pool...i.e, all the JDBC con object from JDBC con pool will be gathered
+		through DataSource obj.
+
+	Advantages of JDBC Con pool
+	---------------------------
+		-> gives the reusability of jdbc con objs
+		-> with minimum jdbc con objs, we can make max Application or clients or request talking to DB s/w
+		-> con obj creation, management and destruction will be taken care by JDBC con pool itself.
+
+	=> By default Hibernate Application uses the Hibernate supplied built in JDBC connection pool whose max size is 20
+	   and min size is 1. This JDBC connection pool is not good for production environment because of performance issue.
+
+	=> In multi-client or multi request environment it is better to make multiple clients/requests using multiple
+	   JDBC connection objects on 1 per request/client basis. If multiple clients or requests are using same connection
+	   object simultaneously then there is a possibility of Dat inconsistency problems..
+
+
+What is the JDBC connection pool that you have used in hibernate Application/Project ?
+Ans:: Don't use hibernate's built-in JDBC connection pool in the projects..
+      because it is bad in production environment[very slow, performance issue]
+
+	If our hibernate application is stand-along application then prefer
+		C3P0
+		proxool CP
+		HikariCp [best]
+		viburCP
+		agroal CP
+	
+	If hibernate app is deployable web app or distributed app then prefer using underlying server managed jdbc con pool like
+	Tomcat managed jdbc con pool, web logic managed jdbc con pool and etc...
+
+	NOTE:: By developing custom connection provider service  we can work with other jdbc con pools like
+	       apache DBCP, Tomcat CP(stand alone) and etc...
+
+
+=> Based on the class/value that we pass for "connection.provider_class" property, the HB f/w decides
+   the jdbc con pool that it has to use in the application development... These classes are Connection
+   provider class implementing "ConnectionProvider" service interface.
+
+	eg:: org.hibernate.connection.C3P0ConnectionProvider for c3p0 con pool
+	     org.hibernate.connection.DriverManagerConnectionProvider for using HB's built-in con pool
+	     org.hibernate.connection.HikariCPConnectionProvider for using HikariCP pool
+
+
+
+Procedure to make stand-alone application using HB persistence logic working with Hikari CP jdbc con pool
+---------------------------------------------------------------------------------------------------------
+	step 1: Keep any hibernate application ready
+	step 2: add Hibernate HikariCp libraries to Project.[if using maven->add dependency in POM file]
+	step 3: Add HikariCp related Connection provider class name in hibernate cfg files.
+		inside hibernate.cfg.xml file
+		-----------------------------
+		<property name="connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>
+
+	step 4: Add hikariCp properties to hibernate cfg file
+		<!-- HikariCP properties  -->
+		<property name="hibernate.hikari.connectionTimeout">40</property>
+		<property name="hibernate.hikari.minimumIdel">10</property>
+		<property name="hibernate.hikari.maximumPoolSize">50</property>
+		<property name="hibernate.hikari.idleTimeout">20</property>
+	
+	step 5: Run the application... and observe the log messages.
+
+
+
+
+
+L 41(16 july)
+-------
+
+Annotations driven Composite ID field cfgs [proj 21 for reference github]
+==========================================
+
+	=> use @Embeddable, @Embeddedid annotation for this
+	=> @Embeddable :: To place on the top of ID class indicating that this is not Entity class... It is
+	                   Embeddable ID class to Entity class
+	
+	=> @Embeddedid :: To cfg special ID property as the Composit id
+
+	NOTE:: Generators cfg like "increment" to generate id value is possible only while working with
+	       singular id field.. not while working with composit id field.
+
+
+
+
+Caching in Hibernate
+====================
+
+	What is the difference b/w pool and cache ?
+	Ans::
+	     Pool :: Set of same objs--gives reusability of same object.
+		     To implement this use array/list collection
+	     Cache :: Set of different objs -- gives reusabilty of different objs
+		      To implement this use Map collection.
+
+		=> In client server App the cache at client side holds the server supplied data/result, and keeps in cache 
+		   and uses them accross the multiple same request.[reduces network round trips b/w client and server applications]
+		=> The cache at client side shoud be empitied at regular intervals[else it will show old data], in order to get
+		    new/fresh/updated data from server application time to time.
+
+
+	=> Hibernate support two levels of caching.. Both caches gets objects representing db table records
+	   and uses them accross the multiple same requests to reduce network round trips b/w java App(HBApp)
+	   and DB s/w.
+	NOTE:: We must empty the cache at regular intervals in order to use caches effectively to get the updated
+	       data from db table of DB s/w.
+
+	=> The two level of caching are
+		a) First Level cache/L1 cache/ Session cache
+			(Built-in cache i.e automatically comes to Session obj)
+			(1 per each Session obj)
+		
+		b) Second Level cache/L2 cache/Level2 cache/SessionFactory
+			(Configurable cache.. We must configure explicitly)
+			(1 per each SessionFactory obj)
+
+	
+	First Level cache/L1 cache/ Session cache
+	=========================================
+		=> It is 1 per each Session object
+		=> It is built-in cache of Session Object
+		=> Both caches maintain the objects of Entity classes as Map of Map collection.
+		=> Every object coming to Session or given ot session object will be there in L1 cache
+		   as per the need
+
+		Different usages of Level1 cache
+		--------------------------------
+		1. When we call ses.save(-), ses.update(-), ses.delete(-), ses.saveOrUpdate(-), ses.merge(-) and etc..method
+		   first they will be placed at L1 cache...later they will be used from L1 cache itself when tx.commit() is called.
+
+		
+
+
+L 42(17 july)
+-------
+		2. If we call ses.get(-) for multiple times having same Entity class and same id value then only
+		   for first time it hits the DB s/w and gets the record...Remaining all times it uses the record/object
+		   from L1 cache.
+
+		3. If we modify the Loaded object for multiple times in a transaction then L1 cache keeps track of 
+		   all the changes and generates single update SQL query at the end representing all the modification.
+		   	
+			Transaction tx=null;
+			try(factory;ses) {
+				//load obj
+				Person p = ses.get(Person.class, 101);
+				if(p==null)
+					System.out.println("Record not Found");
+				else{
+					p.setPrice(900.0);
+					p.setQty(21.0);
+					ses.update(); //optional to write, commit will do it automatically
+					tx.commit();
+					sop("Object updated");
+				}
+			}
+			catch(HibernateException he) {
+				he.printStackTrace();
+			}
+
+		
+		=> First level cache or L1 cache is built-in cache of Session object which enabled
+		   automatically.. This cache can not be disabled because it part of hibernate echo system.
+
+		=> Level 1 cache is internally Map of Map collection
+				
+	To Control L1 cache [we can't disable L1 cache, but we can control L1 cache]
+	===================
+		=> To remove specifiy object from L1 cache use ses.evict(obj);
+		eg:: ses.evict(p);
+		
+		=> To remove all object from L1 cache we use ses.clear();
+
+		=> If we close the session by using ses.close(), its L1 cache will also be vanished.
+
+		NOTE:: To empty the cache at regular intervals we need to write logics explicitly.
+
+
+L 43(20 july)
+-------
+	*Internals of L1 cache
+
+
+L 44(21 July)
+=============
+	
+	Candidate Key Column
+	--------------------
+		=> The column in the db table that maintains unique value using which we
+		   can identify and access the record is called candidate key column.
+
+		Employeeinfo(db table)
+			|-> eno(pk) [candidate key column]
+			|-> eadd(vc2)
+			|-> salary(float)
+			|-> panNo(n)  [candidate key column]
+			|-> aadharNo(n)  [candidate key column]
+			|-> passPortNo(n) [candidate key column]
+
+	Natural Key column
+	==================
+		=> The candidate key column of db table who is having capability of holding
+		   business values using which we can access the records inside the db software
+		   and outside the db software is called natural key column.
+		   These values will changed based on outside changing business policies.
+		eg:: panNo, aadharNo, voterId etc...
+
+	Surrogate key column
+	====================
+		=> The candidate key column of db table whose values will be generated by the underlying db s/w or application
+		   is called surrogate key column. These values will not have any business meaning, so they will not be changed
+		   becaue of outside world business policies changes.
+		eg:: sequence generated values in oracle
+		     auto increment col values in mysql
+		     hibernate generators generated values.
+		     and etc....
+
+	
+	NOTE:: Candidate key, natural keym surrogate key are the logical constraints in DB table..
+	       physically they can not be created
+
+
+	Limitation of taking Natural key columns as PK columns
+	------------------------------------------------------
+		=> values are very lengthy.. so they need more memory
+		=> If end users forgets to supply these numbers, the record insertion will be failed
+		=> These values are expected from end users
+		=> The outside worlds business policies changes may effect the pk col values change and other its dependent db table(this change is very costly)
+	NOTE:: better not to take natural key column as PK column
+
+
+
+
+	Advantage of taking surrogate key column as PK column
+	=====================================================
+		=> these values are small in length so does not need much memory
+		=> No business meaning for these values. So any change in outside busineess
+		   policies will not effect current db tables and its dependents.
+		=> Not expected from end user, generated by the underlying db s/w or app dynamically
+	NOTE:: It is always recommended to take surrogate key columns as pk value.
+
+
+
+Generators in hibernate
+=======================
+	
+	=> These are different algorithms using which we can generate the id values/pk column
+	   values dynamically in the Entity class objects.
+	=> These are supporting to take pk column as surrogate key columns because these generators make
+	   underlying db s/w or hibernate f/w to generate the id values dynamically.
+
+	3 types of Generators
+	=====================
+		a) Hibernate Generators(12+) [both in xml driven cfgs and annotation driven cfgs]
+		b) JPA Generators(4) [ only in annotation driven cfgs]
+		c) Custom generators
+
+
+	Hibernate Generators
+	====================
+		assigned(default), sequences, seqhilo, identity, native, hilo(removed from 5.x), foreign, select, uuid, guid, increment, and etc....
+		[these are specific to HB f/w]
+	
+	JPA Generators
+	==============
+		AUTO, SEQUENCE, IDENTITY, TABLE
+		[common for multiple orm f/w]
+
+	=> While choosing and working with Generators we need to consider
+		a) make sure that the generator generated value is compitable to store in id property.
+		b) make sure that the underlying db s/w supports the generators.
+
+	=> To configure each generator through cfgs use <generator> tag
+	=> To configure each generator through annotation cfgs use @GeneratedValue annotation.
+	 
+
+
+L 45(22 July)
+=============
+
+	Hibernate Generators
+	====================
+		=> These are specific to Hiberante f/w. i.e, can't be used in other ORM f/w.
+		=> Total 12+ generators are given
+		=> Every HB generator is a java class implements org.hibernate.id.identifierGenerator(i) directly or indirectly.
+
+		generator		class
+		---------		------
+		assigned		org.hibernate.id.Assigned
+		increment		org.hibernate.id.IncrementGenerator
+		sequence		org.hibernate.id.SequenceGenerator
+		HILO			org.hibernate.id.HiloTableGenerator
+		and etc....
+
+	
+		To cfg HB generator in xml driven cfgs
+			<generator class="...">
+				<param name="..." value="..." /> NOTE:: Param name provies input to the generators
+				<param name="..." value="..." />
+			</generator>
+		
+	NOTE:: we can use generators only while working with singular Identity fields.
+		
+		assigned
+		--------
+			=> It is default generator if no generator is configured.
+			=> makes the application/developer assigning value to id property before calling ses.save(-) method.
+			=> If we want to assign end user supplied value as the id value(pk col value) then take support of "assigned"
+			   generator..(indirectly we are taking natural key column as PK column)
+			=> After purchasing vehicle... we want to assign out choice fancy number as vahicle number by participating in Auction.
+
+			In mapping files
+			----------------
+				<id name="pid">
+					<generator class="assigned" />
+				</id>
+
+				OR
+				<id name="pid" />
+	
+			=> Allows to take any type of property as the ID property
+			=> works with all DB s/w..
+
+
+		USECASES::
+			Choosing fancy mobile number, vehicle number and etc...
+
+		
+		increment generator
+		-------------------
+			=> Generates the id values of type int, short, long by using <max value>+1 formula to get first id value by hitting the DB s/w to get
+			   max value and uses <previous value>+1 formula to the next id values without hitting the DB s/w.
+
+			NOTE:: The object for the cfg generator class will be created along with SessionFactory obj build process.
+			       And the object will be used for multiple times.
+			
+			=> Increment generator works in all DB s/w.
+			=> Increment generator can be used in multithreaded env..
+			=> Increment generator can't be used in clustered env...
+			=> Increment generator can be used in multi-threaded env of a application that are using same session
+			   objects and different entity objects.
+
+			
+
+
