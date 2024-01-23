@@ -2350,7 +2350,7 @@ L 45(22 July)
 			=> makes the application/developer assigning value to id property before calling ses.save(-) method.
 			=> If we want to assign end user supplied value as the id value(pk col value) then take support of "assigned"
 			   generator..(indirectly we are taking natural key column as PK column)
-			=> After purchasing vehicle... we want to assign out choice fancy number as vahicle number by participating in Auction.
+			=> After purchasing vehicle... we want to assign our choice fancy number as vahicle number by participating in Auction.
 
 			In mapping files
 			----------------
