@@ -2382,7 +2382,57 @@ L 45(22 July)
 			=> Increment generator can't be used in clustered env...
 			=> Increment generator can be used in multi-threaded env of a application that are using same session
 			   objects and different entity objects.
+			=> To generate value, it uses maxVal and it gets maxValue one time in a session, then it follows previous value +1 concept.
+			   It is not like it gets maxvalue every time from db in a single session.
+				   
 
-			
+L 46(23 July)
+=============			
+		increment generator
+		-------------------
+			=> Increment Generator can be used in multi-threaded env.. of a application that uses same session objects and different entity objects.
+			=> Increment generator object(in fact any generator object) will be created only once during sessionFactory creation and it
+			   maintains the generated id value always so that it can be used while generating next id value if needed.
+		
+		Usecase of Web application environment (Online ticket reservation application)
+		--------------------------------------
+		For every request one thread will be created, let us assume 3 request so 3 thread
+			Thread 1 (request 1) -> ses.save(-)[ticket no 101 generated]   tx.commit()
+			Thread 2 (request 2) -> ses.save(-)[ticket no 101+1=102 generated]   tx.commit()
+			Thread 3 (request 3) -> ses.save(-)[ticket no 102+1=103 generated]   tx.commit()
+		 
+		 -> for thread 1 after ses.save, ticket no 101 created and tx.commit() not called and thread switch happened,
+		    Now for thread 2, it will generate 101+1 as a ticket no, so even if tx.commit() is not called, it wont have duplicate value
+		    as for each thread seperate unique value is created. This is why we call, it is maxValue+1 once then always prevValue+1 is used.
+
+		Hence, Increment generator can be used in multithreaded environment.
+		
+		NOTE:: Increment generator goes not support cluster environment
+		Cluster environment [ keeping bunch of similar thing is cluster]
+		-------------------
+			-> Let us imagine a scanerio, 3 machine from different location hitting a same db and trying to insert records.
+			   Now machine 1 got max value, and it make maxValue+1 and thread switch happened, now machine 2 will also get same
+			   maxvalue and it makes maxValue+1, and both value are same as commit is not done. In this case duplicate entry of pk will be done which 
+			   will not be allowed and, for machine 2 record will not be inserted.
+				    	
+				   			
+L 47(24 July)
+=============
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
